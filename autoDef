@@ -1,0 +1,98 @@
+#!./perl
+
+##########################################################################
+#                                                                        #
+# Copyright 2002 Rational Software Corporation.                          #
+# All Rights Reserved.                                                   #
+# This software is distributed under the Common Public License Version   #
+# 0.5 (CPL), and you may use this software if you accept that agreement. #
+# You should have received a copy of the CPL with this software          #
+# in the file LICENSE.TXT.  If you did not, please visit                 #
+# http://www.opensource.org/licenses/cpl.html for a copy of the license. #
+#                                                                        #
+##########################################################################
+
+#api input: libatriaxxx, xxx.def, func1,func2,....funcx.
+#api output: xxx.def file
+
+$| = 1;
+
+$debug = $ENV{AUTODEF_DEBUG};
+
+open(CONFIG, $ARGV[0])||die "Missing conf files\n";
+while(<CONFIG>){
+    chop $_;
+    $_ || next;
+    next if /^\s*\#/;
+    unless($_ =~ /\w*#/){
+	   ($varname, $varval) = split("=", $_,2);
+	   $$varname = $varval;        #this is where you get $funcs
+	   if($varname eq 'DeBug'){
+	       $debug =1;
+	   }
+	   if($debug){print "\t $varname = $$varname\n";}
+       }
+}
+
+#funcs, defName, libName are defined in the .conf file
+@funcArray = split(/\s/,$funcs);
+$libDir = getLibDir();
+
+open DefFile, ">$defName" || die " Can't open $defName";
+print DefFile "LIBRARY $libName\n"; #first two lines of .def file
+print DefFile "EXPORTS\n";
+my $ordinal;
+for $funcName (@funcArray){
+    $ordinal = getOrdinal($funcName);
+    if($ordinal != -1){       #each exports ordinal
+	print DefFile "\t$funcName\t\@$ordinal\n";
+	print STDERR "ordinal: \t$funcName\t\@$ordinal\n" if $debug;
+    }else{
+	die "getOrdinal failed on $funcName\n";
+    }
+}
+close(DefFile);
+
+1;
+
+sub getLibDir{
+    if($ENV{'ATRIAHOME'}){
+	return ($ENV{'ATRIAHOME'} . "\\bin\\") ;
+    }elsif($ENV{'PATH'}){  
+	@aa = split(/;/,$ENV{'PATH'});
+	for(@aa){
+	    if($_ =~ /ClearCase\\bin/){
+		return ($_ . "\\") ;
+	    }
+	}
+    }else{
+	die "Haven't set ClearCase path\n";
+    }
+}
+
+sub getOrdinal{
+    my $name =shift;
+    $libFP = $libDir.$libName . '.dll';
+    my $line = "";
+
+    $cmd = "dumpbin /exports \"$libFP\" ";
+    print STDERR "Dumpbin command: $cmd\n" if $debug;
+
+    @screen = `$cmd`;
+    for(@screen){
+	if(/$name/){
+	    $line = $_;
+	    last; #as break in C
+	}
+    }
+    if($line){
+	$line=~ tr/[0-9]/x/c;  #change all the non-digit to x
+	$line=~ tr/x/y/s;      #squeeze to multiple x to single y
+	@aa = split(/y/,$line); #split the string to digit array
+	return $aa[1];          #take the second one as ordinal
+    }
+    return -1;
+}
+
+
+

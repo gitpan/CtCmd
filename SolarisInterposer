@@ -1,0 +1,32 @@
+##########################################################################
+#                                                                        #
+# Copyright 2002 Rational Software Corporation.                          #
+# All Rights Reserved.                                                   #
+# This software is distributed under the Common Public License Version   #
+# 0.5 (CPL), and you may use this software if you accept that agreement. #
+# You should have received a copy of the CPL with this software          #
+# in the file LICENSE.TXT.  If you did not, please visit                 #
+# http://www.opensource.org/licenses/cpl.html for a copy of the license. #
+#                                                                        #
+##########################################################################
+package SolarisInterposer;
+
+
+sub MY::subdirs{
+	'
+-lzuba: libzuba.so
+
+libzuba.so:	aux_zuba.o
+	@echo "linking libzuba.so
+	ld -G  -f /usr/ucblib/librpcsoc.so.1 -z interpose -o  $(INST_ARCHAUTODIR)/libzuba.so aux_zuba.o
+
+aux_zuba.o: aux_zuba.c
+	@echo "compiling aux_zuba.c"
+	$(CC) -c aux_zuba.c
+
+'
+}
+
+
+1;
+
