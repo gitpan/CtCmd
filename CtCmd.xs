@@ -153,7 +153,7 @@ MODULE = ClearCase::CtCmd		PACKAGE = ClearCase::CtCmd	PREFIX=cmd_
 PROTOTYPES: ENABLE
 
 int
-stat()
+cmdstat()
   CODE:
 	RETVAL = status;
   OUTPUT:
@@ -249,6 +249,8 @@ exec(...)
         return;
         }
 #endif
+	pfm_init ();
+	vob_ob_all_cache_action(NULL,1,1);
 	if(argc == 2){   /* There is only one argument.  Treat it as a string. */
 	    status = dispatched_syn_call (
 		argv[1],
@@ -274,6 +276,7 @@ exec(...)
 		out_p = hv_fetch(myhash,"status",6,0);
 		sv_setiv(*out_p, status);
 	}
+	vob_ob_all_cache_action(NULL,3,0);
 	free(argv);
 	stg_free_area(area,TRUE);
 	EXTEND(sp,1);	

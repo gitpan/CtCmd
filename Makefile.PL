@@ -69,7 +69,7 @@ if ($os =~ /solaris/){
 			$default_compiler.$flag_rd
 			);
     die "Cannot find ClearCase 4.1 or higher or cannot find $cleartool" 
-	unless CheckVer('ClearCase version',
+	unless $ctver = CheckVer('ClearCase version',
 			4.1,
 			$cleartool.' -ver',
 			1
@@ -96,7 +96,7 @@ if ($os =~ /solaris/){
 			2.7,$Config{cc}.' -v 2>&1'
 		       );
     die "Cannot find ClearCase 4.1 or higher or cannot find $cleartool" 
-	unless CheckVer('ClearCase version',
+	unless $ctver = CheckVer('ClearCase version',
 			4.1,
 			$cleartool.' -ver',1
 			);
@@ -112,14 +112,14 @@ if ($os =~ /solaris/){
 
 }elsif  ($os =~ /hpux/){
 
-    my ($highenough,$ctver) = CheckVer(
+    $ctver = CheckVer(
 				       'ClearCase version',
 				       4.1,
 				       $cleartool.' -ver',
 				       1
 				       );
     die "Cannot find ClearCase 4.1 or higher or cannot find $cleartool" 
-	unless $highenough;
+	unless $ctver;
     $osver = `uname -r`;chomp $osver;
     $osver =~ s/^[A-Z]\.//;print "OSVER $osver\n";
     $opts{LIBS} =  $opts{LIBS}.' -lperl -lperlDynaLoader ' if $ctver < 5;
@@ -128,7 +128,7 @@ if ($os =~ /solaris/){
 	$opts{LIBS} =  $opts{LIBS}.'-lcurses -lM -lezrpc  -lrpcsvc -lsec -lstd -lstream -lcl -lc   -ldld ';
 	$opts{DEFINE}= $opts{DEFINE}.'-DATRIA_HPUX10';
 	$opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -lCsup'};
-    }elsif(11 >= $osver && $osver < 12 ){
+    }elsif(11 <= $osver && $osver <= 11.11 ){
 	print "HPUX-11\n";
 	$opts{LIBS} =  $opts{LIBS}.'-lcurses -lM -lezrpc  -lrpcsvc -lsec -lstd -lstream -ldld -lCsup';
 	$opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -l:libcl.0  -l:libc.0 '};
@@ -144,21 +144,21 @@ if ($os =~ /solaris/){
 		unless CheckVer('Version',12,$Config{cc}.' 2>&1' );
     die 
 	"Cannot find ClearCase 4.2 or higher or cannot find cleartool in PATH" 
-	    unless CheckVer(
+	    unless $ctver = CheckVer(
 			    'ClearCase version',
 			    4.2,
 			    'cleartool -ver',
 			    1
 			    );
     $opts{CCFLAGS} = $Config{ccflags}.' -DATRIA_WIN32_COMMON';
-    $opts{LIBS}='/defaultlib:cmdsyn.lib /defaultlib:ks.lib  "/defaultlib:WS2_32.LIB"';
-    $opts{MYEXTLIB}='cmdsyn.lib ks.lib';
+    $opts{LIBS}='/defaultlib:cmdsyn.lib /defaultlib:ks.lib /defaultlib:vob.lib  "/defaultlib:WS2_32.LIB"';
+    $opts{MYEXTLIB}='cmdsyn.lib ks.lib vob.lib';
     $opts{LDDLFLAGS}=$Config{lddlflags};
     $opts{LDDLFLAGS} =~ s/-nodefaultlib//;
     require 'Win32C_O';
 }elsif ($os =~ /AIX/i){
     die "Cannot find ClearCase 4.1 or higher or cannot find $cleartool" 
-	unless CheckVer(
+	unless $ctver = CheckVer(
 			'ClearCase version',
 			4.1,
 			$cleartool.
@@ -167,6 +167,7 @@ if ($os =~ /solaris/){
 			);
 }else{print "Unsupported Platform\n"}
 
+$opts{LIBS} .= ' -latriamsadm -latriamsinfobase -latriamsinfovob' if $ctver >= 6;
 
 WriteMakefile(%opts);
 
@@ -187,7 +188,10 @@ sub CheckVer{
     $ans = 'Not Found' unless $1;
     print "Looking for $expected_string\t$level\t$ans\t$found_level\n";
     if ($found_level >= $level){
-	return 1,$found_level
-	}else{return $found_level,0}
+	return 	$found_level;
+    }else{
+	return 0;	
+    }
 }
+
 

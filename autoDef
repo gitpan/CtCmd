@@ -56,7 +56,9 @@ close(DefFile);
 1;
 
 sub getLibDir{
-    if($ENV{'ATRIAHOME'}){
+    if($ENV{'CLEARCASEHOME'}){
+	return ($ENV{'CLEARCASEHOME'} . "\\bin\\") ;
+    }elsif($ENV{'ATRIAHOME'}){
 	return ($ENV{'ATRIAHOME'} . "\\bin\\") ;
     }elsif($ENV{'PATH'}){  
 	@aa = split(/;/,$ENV{'PATH'});

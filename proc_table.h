@@ -76,7 +76,14 @@ extern int cmdsyn_execv_dispatch (int,char **,gen_t,gen_t *,
 __declspec( dllimport )
 #endif 
 extern gen_t stg_create_area ( int );
-
+#ifdef ATRIA_WIN32_COMMON
+__declspec( dllimport )
+#endif
+extern int vob_ob_all_cache_action(int, int, int);
+#ifdef ATRIA_WIN32_COMMON
+__declspec( dllimport )
+#endif
+extern void pfm_int(void);
 void blok_init (BLOK *);
 int dispatched_synv_call(int, char **, BLOK *, BLOK *, gen_t, gen_t *, gen_2_t *);
 int dispatched_syn_call (char *, BLOK *, BLOK *, gen_t , gen_t *, gen_2_t * );

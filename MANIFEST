@@ -34,5 +34,6 @@ CC/Version.pm
 autoDef
 cmdsyn.conf
 ks.conf
+vob.conf
 cpprt0_stub.s
 xdr.h

@@ -33,19 +33,16 @@ will display the self-documentation.  Before installation the command
 #									 #
 ##########################################################################
 
-In the interests of simplicity, performance and cross platform 
-compatiblity ClearCase::CtCmd does not save/restore user signal 
-handlers upon entrance/exit.  Users are, of course, able to explictly
+ClearCase::CtCmd does not save/restore user signal handlers upon 
+entrance/exit.  Users are, of course, able to explictly
 restore their signal handlers with the $SIG{<signal>} = <handler ref>
-mechanism after each invocation of ClearCase::CtCmd::exec(), 
-and, under the terms of the License, free to modify CtCmd.xs
-by inserting appropriate sigaction() or other function calls to store
-and restore any or all signal handlers while entering and exiting 
-CtCmd.xs:exec(...).  
-
-Please note that the above behavior is consistent with other Rational
-API products, including the ClearCase Automation Library  and the 
-C API to ClearCase.
+mechanism after each invocation of ClearCase::CtCmd::exec(),
+but user signal handlers are modified by the ClearCase libraries
+called by ClearCase::CtCmd, except that with ClearCase versions 
+greater than 5.0, if the signal handler for signals 1, 2, 3 or 15 
+is set to SIG_IGN ( that is, $SIG{[1|2|3|15]} = 'IGNORE' ) 
+the signal handler will be saved during and after 
+an invocation of ClearCase::CtCmd::exec.
 
 ##########################################################################
 #									 #

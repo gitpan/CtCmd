@@ -22,7 +22,7 @@ require AutoLoader;
 
 @ISA = qw(Exporter DynaLoader);
 @EXPORT_OK = qw(cleartool);
-$ClearCase::CtCmd::VERSION = '1.02';
+$ClearCase::CtCmd::VERSION = '1.03';
 bootstrap ClearCase::CtCmd $VERSION;
 
 
@@ -52,10 +52,7 @@ ClearCase::CtCmd - Perl extension for Rational ClearCase
 
 =head1 PLATFORMS/VERSIONS
 
-Runs under ClearCase v4.1, v4.2 and v5.0.
-
-Runs under Solaris 2.7, Solaris 2.8,HP-UX 10.20, HP-UX 11.00, RH Linux 6.2, RH Linux 7.1 and MSWin32 - Windows NT 4.0 and Windows 2000.  Consult the author for information on running under Solaris 2.6 and 2.5.1.
-
+See INSTALL for a list of supported platforms and ClearCase versions.
 
 =head1 SYNOPSIS
 
@@ -67,7 +64,7 @@ Runs under Solaris 2.7, Solaris 2.8,HP-UX 10.20, HP-UX 11.00, RH Linux 6.2, RH L
 
     $stdout = $aa[1];
 
-    @aa=ClearCase::CtCmd::exec("ls /nowheresville");
+    @aa = ClearCase::CtCmd::exec("ls /nowheresville");
 
     $error = $aa[2];
 
@@ -87,16 +84,20 @@ Runs under Solaris 2.7, Solaris 2.8,HP-UX 10.20, HP-UX 11.00, RH Linux 6.2, RH L
 
     @aa = cleartool(qw(lsproj -s -invob /vobs/projects));
 
+    $x = ClearCase::CtCmd::exec("ls /nowheresville");
+
+    die $x if &ClearCase::CtCmd::cmdstat;
+
 =head1 DESCRIPTION
 
- 
 
 B<I/O>
 
-ClearCase::CtCmd::exec() takes either a string or a list  as an input argument, and returns a three element Perl array as output.  
+ClearCase::CtCmd::exec() takes either a string or a list  as an input argument, and, in array context, returns a three element Perl array as output.  
 
 
 The first output element is a status bit containing 0 on success, 1 on failure.The second output element is a scalar string corresponding to stdout, if any.  The third element contains any error message corresponding to output on stderr.  
+In scalar context, ClearCase::CtCmd::exec() returns output corresponding to either stdout or stderr, as appropriate.  ClearCase::CtCmd::cmdstat() will return 0 upon success, 1 upon failure of the last previous command.
 
 ClearCase::CtCmd->new()  may be used to create an instance of ClearCase::CtCmd.  There are three possible construction variables:
 
@@ -117,6 +118,8 @@ Upon the return of class method exec:
     ($a,$b,$c) = ClearCase::CtCmd::exec( some command );   
 
 the first returned element $a contains the status of "some command":  0 upon success, 1 upon failure.  
+
+In scalar context  ClearCase::CtCmd::cmdstat() will return 0 upon success, 1 upon failure of the last previous command.
 
 Upon the return of instance method exec:
 
