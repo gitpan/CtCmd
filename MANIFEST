@@ -12,6 +12,7 @@ INSTALL
 MANIFEST
 LICENSE.TXT
 README
+ChangeLog
 CC/CC.pm
 CC/Activity.pm
 CC/Component.pm

@@ -21,6 +21,8 @@ use Test;
 BEGIN { plan tests => 27 };
 $view_netname = "";
 $rv = 0;
+$tmpDir = '/var/tmp';
+$tmpDir = $ENV{CC_CTCMD_TMP} if $ENV{CC_CTCMD_TMP};
 
 $pre = "";
 
@@ -103,7 +105,6 @@ if($OS eq "Window"){
     $fNameFP = $vobNameFP . "\\" . $fName;
     
 }else{
-    $tmpDir = "/var/tmp";
     $tmpDirFP = $tmpDir . "/";    #FP nean full path 
     $vob_tmpDirFP = $tmpDirFP;
     $view_tmpDirFP = $tmpDirFP;

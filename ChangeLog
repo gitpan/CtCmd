@@ -9,24 +9,9 @@
 # http://www.opensource.org/licenses/cpl.html for a copy of the license. #
 #                                                                        #
 ##########################################################################
-package SolarisInterposer;
 
 
-sub MY::subdirs{
-	'
--lzuba: libzuba.so
-
-libzuba.so:	aux_zuba.o
-	@echo "linking libzuba.so
-	/usr/ccs/bin/ld -G  -f /usr/ucblib/librpcsoc.so.1 -z interpose -o  $(INST_ARCHAUTODIR)/libzuba.so aux_zuba.o
-
-aux_zuba.o: aux_zuba.c
-	@echo "compiling aux_zuba.c"
-	$(CC) -c aux_zuba.c
-
-'
-}
-
-
-1;
-
+1.02  Modify ld in  SolarisInterposer.	Expand Windows $os test. 
+	Add sections to README.  Add ChangeLog.
+1.01 Fixed outfunc,errfunc.
+1.00 Initial release to CPAN.

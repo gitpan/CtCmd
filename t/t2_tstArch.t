@@ -31,6 +31,9 @@ $rv = 0;
 @aa = ();
 $this_activity=NULL;
 
+$tmpDir = '/var/tmp';
+$tmpDir = $ENV{CC_CTCMD_TMP} if $ENV{CC_CTCMD_TMP};
+
 $OS = &os_test;
 
 use Test;
@@ -74,7 +77,6 @@ if($OS eq "Window"){
     $fNameFP = $vobNameFP . "\\" . $fName; 
 
 }else{
-    $tmpDir = "/var/tmp";
     $tmpDirFP = $tmpDir . "/";    #FP means full path 
     $vob_tmpDirFP = $tmpDirFP;
 

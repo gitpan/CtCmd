@@ -23,7 +23,8 @@ my $prefix_1;
 
 my $OS = $^O =~ /Win/ ? "Window" : "Unix";
 
-
+$tmpDir = '/var/tmp';
+$tmpDir = $ENV{CC_CTCMD_TMP} if $ENV{CC_CTCMD_TMP};
 
 
 $prefix_1 || ($prefix_1 = $ENV{TMP}) ||  ($prefix_1 = $ENV{tmp}) || ($prefix_1 = $ENV{Tmp});
@@ -87,7 +88,6 @@ if($OS eq "Window"){
     $vobStgFP = $vob_tmpDirFP . $vobStg;
 
 }else{
-    $tmpDir = "/var/tmp";
     $tmpDirFP = $tmpDir . "/";    #FP nean full path 
     $vob_tmpDirFP = $tmpDirFP;
 

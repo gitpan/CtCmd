@@ -46,6 +46,10 @@ variable TEST_VERBOSE=1 and run "make -e test".
 Note:  The CC class is for test purposes only, although it
 may be consulted for an indication of how ClearCase::CtCmd may be used.
 
+When the MVFS is not installed, e. g. with ClearCase LT, it is not possible
+to "make test".  However, in most cases, passing directly from a 
+successful "make" to "make install" will be satisfactory.
+
 __________________________________________
 
 Platform Notes
@@ -56,6 +60,10 @@ Unix/Linux:
 Set environment variable ATRIA_ROOT to the  
 path to the ClearCase installation if different from /usr/atria:  
 Linked install:  set ATRIA_ROOT to network path.
+
+If /var/tmp is not available, set environment variable CC_CTCMD_TMP
+to the path of an altrnative directory.
+
 
 Solaris:
 
@@ -132,6 +140,5 @@ set CC_VIEW_NETNAME=\\net\
 
 Note that there are no quotes around \\net\  . 
 __________________________________________
-
 
 

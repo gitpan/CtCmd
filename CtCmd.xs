@@ -134,20 +134,35 @@ dispatched_synv_call (int argc, char * argv[], BLOK *outP, BLOK *errP, gen_t are
     }
     imsg_set_app_name("ClearCase::CtCmd");
     imsg_redirect_output (out_rtn, outP, err_rtn, errP);
-    return (cmdsyn_execv_dispatch (argc,argv, area,a_cmdsyn_cmdflags,a_cmdsyn_proc_table) == T_OK);
+    return 
+	(
+	    cmdsyn_execv_dispatch (
+		argc,
+		argv, 
+		area,
+		a_cmdsyn_cmdflags,
+		a_cmdsyn_proc_table
+	    ) == 
+	    T_OK
+	);
 }
 
-
+int status;
 
 MODULE = ClearCase::CtCmd		PACKAGE = ClearCase::CtCmd	PREFIX=cmd_	
 PROTOTYPES: ENABLE
 
+int
+stat()
+  CODE:
+	RETVAL = status;
+  OUTPUT:
+	RETVAL
 
 int
 exec(...)
   PPCODE:
 	int gimme = GIMME_V;
-	int status;
 	int debug = 0;
 	int is_object;
 	SV* sv;
@@ -164,7 +179,7 @@ exec(...)
   WSADATA wsaData;
   int myerr;
 #endif
-	int StdOut = 1;
+        int StdOut = 1;
 	int StdErr = 1;
 	int i = 1;
 	int offset=1;
@@ -185,27 +200,37 @@ exec(...)
 		offset--;
 		if(debug){
 			printf("Object\t%s\n",pkg_p);
-			if (sv_derived_from(ST(0), "ClearCase::CtCmd")) { printf("Derived from ClearCase::CtCmd\n"); }
+			if (sv_derived_from(ST(0), "ClearCase::CtCmd")) { 
+			    printf("Derived from ClearCase::CtCmd\n"); 
+			}
 		}
 	}
 
 
 
-	if ( sv_isa(ST(0), "ClearCase::CtCmd") || sv_derived_from(ST(0), "ClearCase::CtCmd") ){
+	if ( sv_isa(ST(0), "ClearCase::CtCmd") || 
+	     sv_derived_from(ST(0), "ClearCase::CtCmd") ){
 		out_p = hv_fetch(myhash, "outfunc", 7, 0);
 		err_p = hv_fetch(myhash, "errfunc", 7, 0);
 		if(out_p == NULL ){}
 		else{   
-			StdOut=(int)SvIV(*out_p); 
-			if (StdOut == 0){blok_out_p = STANDARD;}else{ StdOut = 1;}
+		    StdOut=(int)SvIV(*out_p); 
+		    if (StdOut == 0){
+			blok_out_p = STANDARD;
+		    }else{ 
+			StdOut = 1;
+		    }
  		}
 		if(err_p == NULL ){}
 		else{   
-			StdErr=(int)SvIV(*err_p); 
-			if (StdErr == 0){blok_err_p = STANDARD;}else{ StdErr = 1;}
+		    StdErr=(int)SvIV(*err_p); 
+		    if (StdErr == 0){blok_err_p = STANDARD;}else{ StdErr = 1;}
  		}
 	}else{
-		if(debug){printf("pkg_p: Not ClearCase::CtCmd: %s\n",(char *)pkg_p);}
+		if(debug){
+		    printf("pkg_p: Not ClearCase::CtCmd: %s\n",
+			   (char *)pkg_p);
+		}
 		is_object=0;
 		/* XXX Not a ClearCase::CtCmd.  What to do? */
 	}
@@ -216,35 +241,35 @@ exec(...)
 		if(debug){printf("argv[%d]\t%s\n",i,argv[i]);}
 	};
 #ifdef ATRIA_WIN32_COMMON
-  VersionRequested = MAKEWORD( 2, 2 );
- 
-  myerr = WSAStartup( VersionRequested, &wsaData );
-  if( myerr != 0 ){printf("we could not find a usable WinSock DLL\n");
-  return;
-  return;
-  }
+        VersionRequested = MAKEWORD( 2, 2 );
+        myerr = WSAStartup( VersionRequested, &wsaData );
+        if( myerr != 0 ){
+	    fprintf(stderr,
+		    "we could not find a usable WinSock DLL\n");
+        return;
+        }
 #endif
 	if(argc == 2){   /* There is only one argument.  Treat it as a string. */
-		status = dispatched_syn_call (
-			argv[1],
-			blok_out_p, 
-			blok_err_p, 
-			area,
-			cmdsyn_get_cmdflags(),
-			cmdsyn_proc_table
-		);
-	}else{
-	        status = dispatched_synv_call (
-			argc,
-			argv, 
-			blok_out_p, 
-			blok_err_p, 
-			area,
-			cmdsyn_get_cmdflags(),
-			cmdsyn_proc_table
-		);
-	} 
-	status=status?0:1;
+	    status = dispatched_syn_call (
+		argv[1],
+		blok_out_p, 
+		blok_err_p, 
+		area,
+		cmdsyn_get_cmdflags(),
+		cmdsyn_proc_table
+	    );
+        }else{
+	    status = dispatched_synv_call (
+		argc,
+		argv, 
+		blok_out_p, 
+		blok_err_p, 
+		area,
+		cmdsyn_get_cmdflags(),
+		cmdsyn_proc_table
+	    );	    
+	}  
+	status = status ? 0 : 1;
 	if(is_object && hv_exists(myhash,"status",6)){
 		out_p = hv_fetch(myhash,"status",6,0);
 		sv_setiv(*out_p, status);

@@ -61,7 +61,7 @@ sub getLibDir{
     }elsif($ENV{'PATH'}){  
 	@aa = split(/;/,$ENV{'PATH'});
 	for(@aa){
-	    if($_ =~ /ClearCase\\bin/){
+	    if($_ =~ /ClearCase\\bin/i){
 		return ($_ . "\\") ;
 	    }
 	}
