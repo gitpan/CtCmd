@@ -1,12 +1,14 @@
 /*************************************************************************
 *                                                                        *
-* Copyright 2002 Rational Software Corporation.                          *
-* All Rights Reserved.                                                   *
-* This software is distributed under the Common Public License Version   *
-* 0.5 (CPL), and you may use this software if you accept that agreement. *
-* You should have received a copy of the CPL with this software          *
-* in the file LICENSE.TXT.  If you did not, please visit                 *
-* http://www.opensource.org/licenses/cpl.html for a copy of the license. *
+* \251 Copyright IBM Corporation 2001, 2004. All rights reserved.           *
+*                                                                        *
+* This program and the accompanying materials are made available under   *
+* the terms of the Common Public License v1.0 which accompanies this     *
+* distribution, and is also available at http://www.opensource.org       *
+*                                                                        *
+* Contributors:                                                          *
+*                                                                        *
+* William Spurlin - Creation and initial framework                       *
 *                                                                        *
 *************************************************************************/
 
@@ -28,19 +30,47 @@
 #include <rpc/rpc.h>
 
 
-CLIENT  *clntudp_create(struct  sockaddr_in  *addr,rpcprog_t prognum, rpcvers_t versnum, struct timeval wait, int *fdp){
+CLIENT *
+clntudp_create(
+    struct  sockaddr_in  *addr,
+    rpcprog_t prognum,
+    rpcvers_t versnum,
+    struct timeval wait,
+    int *fdp)
+{
     CLIENT *rv;
     rv = (CLIENT *)NULL;
     return rv;
-};
+}
 
 
 
-CLIENT  *clntudp_bufcreate(struct  sockaddr_in  *addr,rpcprog_t prognum, rpcvers_t versnum, struct timeval wait, int *fdp,  uint_t sendsz,uint_t recvsz){
+CLIENT *
+clntudp_bufcreate(
+    struct  sockaddr_in  *addr,
+    rpcprog_t prognum,
+    rpcvers_t versnum,
+    struct timeval wait,
+    int *fdp,
+    uint_t sendsz,
+    uint_t recvsz)
+{
     CLIENT *rv;
     rv = (CLIENT *)NULL;
     return rv;
-};
+}
 
 
-
+CLIENT *
+clnttcp_create(
+    struct sockaddr_in *addr,
+    u_long prognum,
+    u_long versnum,
+    int *fdp,
+    u_int sendsz,
+    u_int recvsz)
+{
+    CLIENT *rv;
+    rv = (CLIENT *)NULL;
+    return rv;
+}

@@ -2,13 +2,16 @@
 
 ##########################################################################
 #                                                                        #
-# Copyright 2002 Rational Software Corporation.                          #
-# All Rights Reserved.                                                   #
-# This software is distributed under the Common Public License Version   #
-# 0.5 (CPL), and you may use this software if you accept that agreement. #
-# You should have received a copy of the CPL with this software          #
-# in the file LICENSE.TXT.  If you did not, please visit                 #
-# http://www.opensource.org/licenses/cpl.html for a copy of the license. #
+# © Copyright IBM Corporation 2001, 2004. All rights reserved.           #
+#                                                                        #
+# This program and the accompanying materials are made available under   #
+# the terms of the Common Public License v1.0 which accompanies this     #
+# distribution, and is also available at http://www.opensource.org       #
+# Contributors:                                                          #
+#                                                                        #
+# Xue-Dong Chen - Creation and framework.                                #
+#                                                                        #
+# William Spurlin - Maintenance and defect fixes                         #
 #                                                                        #
 ##########################################################################
 
@@ -20,6 +23,7 @@ use CC::VobObject;
 use CC::CompHlink;
 use CC::Component;
 use CC::Folder;
+use CC::Baseline;
 use ClearCase::CtCmd;
 #used to disable some test
 
@@ -227,7 +231,6 @@ sub tstArch{
 
     print  "\n\n",name_title($this_activity,"The Chosen Activity");
     $this_activity->start_work(CC::View->current_view);
-
 
     for $component ($this_activity->stream->components){
 	$path=$this_activity->stream->foundation_baseline($component)->component->root_directory->path;

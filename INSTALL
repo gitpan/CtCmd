@@ -1,27 +1,31 @@
 ##########################################################################
 #                                                                        #
-# Copyright 2002 Rational Software Corporation.                          #
-# All Rights Reserved.                                                   #
-# This software is distributed under the Common Public License Version   #
-# 0.5 (CPL), and you may use this software if you accept that agreement. #
-# You should have received a copy of the CPL with this software          #
-# in the file LICENSE.TXT.  If you did not, please visit                 #
-# http://www.opensource.org/licenses/cpl.html for a copy of the license. #
+# © Copyright IBM Corporation 2001, 2005 All rights reserved.            #
+#                                                                        #
+# This program and the accompanying materials are made available under   #
+# the terms of the Common Public License v1.0 which accompanies this     #
+# distribution, and is also available at http://www.opensource.org       #
+# Contributors:                                                          #
+#                                                                        #
+# William Spurlin - Initial version and revisions                        #
 #                                                                        #
 ##########################################################################
 
 _________________________________________
 
+The ClearCase::CtCmd module requires Perl v5.6.1 or v5.8 or later.
 The ClearCase::CtCmd module requires that ClearCase be installed:
 
-Platform			ClearCase Version
+Platform                    ClearCase Version
 _________________________________________
 
-Solaris 2.7,2.8,2.9		4.1 or greater
-RH Linux 6.2,7.0,7.1,7.2	4.1 "  "
-HP-UX 10.20,11.00,11.11		4.1  "  "
-Windows NT 4.0,5.0,5.1		4.2  "  "
-AIX 5.1,5.0,4.3	        	4.1  "  "
+Solaris 2.7, 2.8, 2.9         2002.05 or later
+HP-UX 11.00, 11.11            2002.05 "  "
+RH Linux 7.2, 7.3, 8.0, 9     2002.05 "  "
+AIX 4.3.3, 5.1, 5.2           2002.05 "  "
+Windows XP Pro                2002.05 "  "
+Windows 2000                  2002.05 "  "
+Windows NT 4.0                2002.05 "  "
 
 
 
@@ -41,7 +45,9 @@ make install
 For verbose output when making test, set environment 
 variable TEST_VERBOSE=1 and run "make -e test".
 
-"make LIB=/<install path>" may be useful for testing "make install".
+To install the module into non-default location, do 
+perl Makefile.PL PREFIX=/<your_home_directory>/. This 
+may be useful for testing "make install".
 
 Note:  The CC class is for test purposes only, although it
 may be consulted for an indication of how ClearCase::CtCmd may be used.
@@ -55,24 +61,37 @@ __________________________________________
 Platform Notes
 __________________________________________
 
-Unix/Linux:
+UNIX/Linux:
 
 Set environment variable ATRIA_ROOT to the  
-path to the ClearCase installation if different from /usr/atria:  
-Linked install:  set ATRIA_ROOT to network path.
+ClearCase installation path if different from /usr/atria:  
+Linked install: set ATRIA_ROOT to network path.
 
 If /var/tmp is not available, set environment variable CC_CTCMD_TMP
-to the path of an altrnative directory.
+to the path of an alternative directory.
 
 
 Solaris:
 
-It is not possible to run ClearCase::CtCmd under Solaris 2.5.1/2.6 
-without setting environment variable LD_PRELOAD to /usr/ucblib/librpcsoc.so.
-Modify Makefile.PL accordingly if you must try this.
+CtCmd has used a Sun "interposing filter", implemented in libzuba.so, to tell
+the runtime loader to load RPC functions from the correct library. However, 
+interposing filters are broken on Solaris 5.8 and 5.9 by some recent (as of 
+2005-03-31) Solaris  patches. See Sun defect 510560:  "ld.so.1 gets a little 
+too enthusiastic with interposition". If CtCmd is broken by one of the patches, 
+below, or one of the corresponding Solaris 2.8 patches, it may be possible to 
+set environment variable LD_PRELOAD to /usr/ucblib/librpcsoc.so to run CtCmd.
 
-If the wrong perl interpreter or C compiler is found
+Note that CtCmd functions normally with certain Solaris 5.9 patches:
+112963-07   work
+112963-09   work
+112963-12   work
+112963-13   doesn't work
+112963-14   doesn't work
+112963-17   work
+112963-18   doesn't work
+112963-19   doesn't work
 
+If the wrong Perl interpreter or C compiler is found, please do
 ln -s <path to Perl> perl; ln -s <path to cc> cc,
 or add the paths to those programs to PATH.
 
@@ -80,23 +99,10 @@ If using Solaris 5.8 /usr/bin/perl and trying to build the Module with gcc,
 Set environment variable CC_CTCMD_GCC=<any non null value>.  This might work
 with other Solaris Perls/gcc, as well. 
 
-HPUX:
+AIX:
 
-The Module will build and install on HPUX-10.20 and HPUX-11.0 
-as long as Perl has been built on the respective system.  In other words,
-If Perl is built on HPUX-10.20, the Module cannot be built on HPUX-11.0,
-and vice-versa.  The reason for this restriction has to do with thread
-safe libc's.  Symbol __pthread_create_system, needed by certain of the 
-HPUX-11 ClearCase shared libraries ,  is found in libc.2, but not
-in libc.1 (HPUX-10.20).  Perl, when built on HPUX-11, depends on libc.2.
-A dependency on libc.2 cannot be built into the Module becasue of the 
-restriction on using shl_load() to load a library containing __thread symbols.
-
-Linux:
-
-Note that is impossible to mount more than 127 VOBs on Linux, and if that
-number or close to it is mounted "make test" may fail when trying to
-create and mount a VOB.
+The only way to run CtCmd with Perl 5.8.6 is to rebuild Perl 5.8.6 with 
+the library link order changed to have -lc before -lnsl.
 
 Win32:
 
@@ -105,20 +111,20 @@ Substitute "nmake" for "make" when building and installing.
 There must be an environment variable: 
 TMP=<path to system temporary storage, full control by everyone>.
 
-The path to Microsoft Visual Studio and to perl must be in the PATH.
+The path to Microsoft Visual Studio and to Perl must be in the PATH.
 
-The user must be able to run "perl", "cleartool", "cl" and "dumpbin"
+The user must be able to run "Perl", "cleartool", "cl" and "dumpbin"
 from the command line without error messages before attempting
 installation.  The environment variables "inc" and "lib" must be set to
 the paths where the MS Visual Studio C include files and libraries are
 kept.  The user's PATH must include the path to the MSDEV ...\common\bin
-and ...\bin directories, as well as the path to cleartool and the Atria
-*.dll's.  Perl, version 5.0004 or greater must be installed, and the
+and ...\bin directories, as well as the path to cleartool and the Clearcase 
+*.dll's.  Perl, version 5.6.1 or greater must be installed, and the
 installed Perl must have the necessary header and other files to allow
 installation of a Perl Module. 
 
 If cmdsyn.lib or ks.lib is not being created it may be because the path to
-"dumpbin" or the path to the Atria libraries is not in the user's PATH
+"dumpbin" or the path to the Clearcase libraries is not in the user's PATH.
 
 An error message "This shared resource does not exist" at the beginning 
 of t/t1_createArch when nmaking test indicates that a view previously mapped
@@ -134,7 +140,7 @@ In case of "nmake test" failure to create test view:
 If the default view net name, "view", has been set to some other value with registry key 
 HKEY_LOCAL_MACHINE:SYSTEM\CurrentControlSet\Services\Mvfs\Parameters\view_netname, 
 set environment variable CC_VIEW_NETNAME=\\<view net name>\ before running 
-"nmake test", or running the tests in directory t explicitly. For example,
+"nmake test", or running the tests in the t directory explicitly. For example,
 
 set CC_VIEW_NETNAME=\\net\
 

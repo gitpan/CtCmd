@@ -1,12 +1,15 @@
 ##########################################################################
 #                                                                        #
-# Copyright 2002 Rational Software Corporation.                          #
-# All Rights Reserved.                                                   #
-# This software is distributed under the Common Public License Version   #
-# 0.5 (CPL), and you may use this software if you accept that agreement. #
-# You should have received a copy of the CPL with this software          #
-# in the file LICENSE.TXT.  If you did not, please visit                 #
-# http://www.opensource.org/licenses/cpl.html for a copy of the license. #
+# © Copyright IBM Corporation 2001, 2004. All rights reserved.           #
+#                                                                        #
+# This program and the accompanying materials are made available under   #
+# the terms of the Common Public License v1.0 which accompanies this     #
+# distribution, and is also available at http://www.opensource.org       #
+# Contributors:                                                          #
+#                                                                        #
+# William Spurlin - Initial version and framework                        #
+#                                                                        #
+# Xue-Dong Chen - Maintenance and defect fixes                           #
 #                                                                        #
 ##########################################################################
 
@@ -134,7 +137,6 @@ if ($os =~ /solaris/){
 	$opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -l:libcl.0  -l:libc.0 '};
     }else{
     }
-    $opts{MYEXTLIB}='cpprt0_stub.o';
 
 }elsif  ($os =~ /MSWin32/ || $os =~ /Windows/){
     die 

@@ -1,12 +1,14 @@
 /*************************************************************************
 *                                                                        *
-* Copyright 2002 Rational Software Corporation.                          *
-* All Rights Reserved.                                                   *
-* This software is distributed under the Common Public License Version   *
-* 0.5 (CPL), and you may use this software if you accept that agreement. *
-* You should have received a copy of the CPL with this software          *
-* in the file LICENSE.TXT.  If you did not, please visit                 *
-* http://www.opensource.org/licenses/cpl.html for a copy of the license. *
+* © Copyright IBM Corporation 2001, 2004. All rights reserved.           *
+*                                                                        *
+* This program and the accompanying materials are made available under   *
+* the terms of the Common Public License v1.0 which accompanies this     *
+* distribution, and is also available at http://www.opensource.org       *
+*                                                                        *
+* Contributors:                                                          *
+*                                                                        *
+* William Spurlin - Initial version and framework                        *
 *                                                                        *
 *************************************************************************/
 
@@ -40,13 +42,13 @@ __declspec( dllimport )
 extern gen_t * cmdsyn_get_cmdflags();
 
 int client_meters_enabled = FALSE;
-void client_meters_finish_program(void){int empty = 1;};
+void client_meters_finish_program(void){int empty = 1;}
 gen_t client_meters_create_region(const char *name){
   int empty = 1;
   return (gen_t)empty;
-};
-void client_meters_exit_region(gen_t handle){int empty = 1;};
-void client_meters_enter_region(gen_t handle){int empty = 1;};
+}
+void client_meters_exit_region(gen_t handle){int empty = 1;}
+void client_meters_enter_region(gen_t handle){int empty = 1;}
 
 
 

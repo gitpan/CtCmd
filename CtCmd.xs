@@ -1,12 +1,18 @@
 /*************************************************************************
 *                                                                        *
-* Copyright 2002 Rational Software Corporation.                          *
-* All Rights Reserved.                                                   *
-* This software is distributed under the Common Public License Version   *
-* 0.5 (CPL), and you may use this software if you accept that agreement. *
-* You should have received a copy of the CPL with this software          *
-* in the file LICENSE.TXT.  If you did not, please visit                 *
-* http://www.opensource.org/licenses/cpl.html for a copy of the license. *
+* © Copyright IBM Corporation 2001, 2004 All rights reserved.            *
+*                                                                        *
+* This program and the accompanying materials are made available under   *
+* the terms of the Common Public License v1.0 which accompanies this     *
+* distribution, and is also available at http://www.opensource.org       *
+*                                                                        *
+* Contributors:                                                          *
+*                                                                        *
+* William Spurlin - Creation and framework                               *
+*                                                                        *
+* Kevin Sullivan - Defect fixes                                          *
+*                                                                        *
+* Xue-Dong Chen - Defect fixes                                           *
 *                                                                        *
 *************************************************************************/
 
@@ -21,12 +27,7 @@ extern "C" {
 #endif
 
 #include "proc_table.h"
-#ifdef ATRIA_HPUX10
-#include <string.h>
-#include <strings.h>
-#include "xdr.h"
-#endif
-#if defined ATRIA_WIN32_COMMON || defined  ATRIA_HPUX10
+#if defined ATRIA_WIN32_COMMON 
 #include <stdio.h>
 #include <stdlib.h>
 #endif
@@ -151,6 +152,33 @@ int status;
 
 MODULE = ClearCase::CtCmd		PACKAGE = ClearCase::CtCmd	PREFIX=cmd_	
 PROTOTYPES: ENABLE
+
+int
+unsetview(...)
+  CODE:
+	int n_ok = 0;
+	if (items > 0) { 
+		if(sv_isobject(ST(0)) && items == 1) {
+ 			/* OK */
+		}
+		else {
+ 			fprintf(stderr,"WARNING: View was not unset. Usage: unsetview()\n");
+			 n_ok = 1;
+		}
+		
+	};
+	if (n_ok) {
+		RETVAL = 1;
+	} else {
+#ifndef ATRIA_WIN32_COMMON
+             RETVAL = view_set_current_view(NULL);
+#else
+             fprintf(stderr,"ERROR: unsetview() not available in Win32\n");
+             RETVAL = 1;
+#endif 
+	}
+  OUTPUT:
+	RETVAL
 
 int
 cmdstat()
