@@ -104,7 +104,7 @@ dispatched_syn_call (char *cmdP, BLOK *outP, BLOK *errP, gen_t area, gen_t * a_c
         blok_reset (errP);
         err_rtn = cmdout;
     }
-    imsg_set_app_name("CtCmd");
+    imsg_set_app_name("ClearCase::CtCmd");
     imsg_redirect_output (out_rtn, outP, err_rtn, errP);
     return (cmdsyn_exec_dispatch (cmdP, area,a_cmdsyn_cmdflags,a_cmdsyn_proc_table) == T_OK);
 }
@@ -132,7 +132,7 @@ dispatched_synv_call (int argc, char * argv[], BLOK *outP, BLOK *errP, gen_t are
         blok_reset (errP);
         err_rtn = cmdout;
     }
-    imsg_set_app_name("CtCmd");
+    imsg_set_app_name("ClearCase::CtCmd");
     imsg_redirect_output (out_rtn, outP, err_rtn, errP);
     return (cmdsyn_execv_dispatch (argc,argv, area,a_cmdsyn_cmdflags,a_cmdsyn_proc_table) == T_OK);
 }
@@ -185,13 +185,13 @@ exec(...)
 		offset--;
 		if(debug){
 			printf("Object\t%s\n",pkg_p);
-			if (sv_derived_from(ST(0), "CtCmd")) { printf("Derived from CtCmd\n"); }
+			if (sv_derived_from(ST(0), "ClearCase::CtCmd")) { printf("Derived from ClearCase::CtCmd\n"); }
 		}
 	}
 
 
 
-	if ( sv_isa(ST(0), "CtCmd") || sv_derived_from(ST(0), "CtCmd") ){
+	if ( sv_isa(ST(0), "ClearCase::CtCmd") || sv_derived_from(ST(0), "ClearCase::CtCmd") ){
 		out_p = hv_fetch(myhash, "outfunc", 7, 0);
 		err_p = hv_fetch(myhash, "errfunc", 7, 0);
 		if(out_p == NULL ){}
@@ -205,9 +205,9 @@ exec(...)
 			if (StdErr == 0){blok_err_p = STANDARD;}else{ StdErr = 1;}
  		}
 	}else{
-		if(debug){printf("pkg_p: Not CtCmd: %s\n",(char *)pkg_p);}
+		if(debug){printf("pkg_p: Not ClearCase::CtCmd: %s\n",(char *)pkg_p);}
 		is_object=0;
-		/* XXX Not a CtCmd.  What to do? */
+		/* XXX Not a ClearCase::CtCmd.  What to do? */
 	}
 	argv  = (char**)malloc(argc*sizeof(char *));
 	argv[0]=NULL;
