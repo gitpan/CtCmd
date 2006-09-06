@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2002, 2004 All rights reserved.            #
+# © Copyright IBM Corporation 2002, 2005 All rights reserved.            #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -11,6 +11,13 @@
 #                                                                        #
 ##########################################################################
 
+1.05  Due to changes in release 7 (Baltic) librpcsoc.so is no longer used.
+      This change affects only Solaris implementations of CtCmd as 
+      librpcsoc.so was only used for Solaris.  This means that release 7
+      does not need the aux_zuba.c and the SolarisInterposer code.  Because
+      we need backward compatibility that code needs to stay in
+      for now.  When releases before release 7 are no longer supported, that
+      code and all references to it may be removed.
 1.04  Corrected compile warnings generated from aux_zuba.c and proc_table.h.
       License upgraded to CPL v1.0.  On Windows, CtCmd.dll links to ClearCase 
       dlls via symbol names instead of ordinal. So a patch of Clearcase

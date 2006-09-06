@@ -81,6 +81,10 @@ too enthusiastic with interposition". If CtCmd is broken by one of the patches,
 below, or one of the corresponding Solaris 2.8 patches, it may be possible to 
 set environment variable LD_PRELOAD to /usr/ucblib/librpcsoc.so to run CtCmd.
 
+Note that ClearCase release 7 eliminates the need for the interposer and
+libzuba.so.  Currently we cannot remove it as we must stay backwards compatible
+with pre-7 releases.
+
 Note that CtCmd functions normally with certain Solaris 5.9 patches:
 112963-07   work
 112963-09   work

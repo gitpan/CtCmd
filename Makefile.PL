@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2001, 2004. All rights reserved.           #
+# © Copyright IBM Corporation 2001, 2006. All rights reserved.           #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -51,7 +51,7 @@ if ($os =~ /solaris/){
 	$esp_ver=2.7;
 	$flag_rd = ' -v 2>&1';
     }elsif($default_compiler =~ /cc/){
-	$esp_str="WorkShop Compilers";
+	$esp_str=/"WorkShop Compilers"|Sun/;
 	$esp_ver=4.2;
 	$flag_rd = ' -V 2>&1';
     }else{
@@ -82,11 +82,18 @@ if ($os =~ /solaris/){
 			5.7,
 			'uname -sr'
 			);
+    if ( CheckVer('ClearCase version',
+                        7.0,
+                        $cleartool.' -ver',
+                        1)) {
+    $opts{MYEXTLIB}=' ';
+    } else {
     require 'SolarisInterposer'; 
-    $opts{LIBS} =$opts{LIBS}.'  -lc  -lw -lCrun'." -R$ATRIA_ROOT/shlib";
+    $opts{MYEXTLIB}='-lzuba';
+    }
+    $opts{LIBS} ="-L/usr/lib ". $opts{LIBS}.'  -lc  -lw -lCrun'." -R$ATRIA_ROOT/shlib";
     $opts{DEFINE}	= $opts{DEFINE}.'-DSVR4';
     $opts{INC}	= '-I. ';
-    $opts{MYEXTLIB}='-lzuba';
     $opts{dynamic_lib} = { OTHERLDFLAGS => '-Lblib/arch/auto/ClearCase/CtCmd -t -ucmdsyn_proc_table  -R$(ATRIA_ROOT)/shlib  -R$(INSTALLSITEARCH)/auto/$(FULLEXT)  -R$(INSTALLSITELIB)/auto/$(FULLEXT) -R$(INST_ARCHLIB)/auto/$(FULLEXT) '} ;
 }elsif ($os =~ /linux/){
     $opts{LD} = "ld";
@@ -105,13 +112,22 @@ if ($os =~ /solaris/){
 			);
     $opts{DEFINE}= $opts{DEFINE}.'-DATRIA_LINUX';
     $opts{INC}='-I. ';
-    $opts{LIBS} =$opts{LIBS}.' -lc -lcurses'; 
+    $opts{LIBS} ="-L/usr/lib ". $opts{LIBS}.' -lc -lcurses'; 
+    if ($Config{perl} =~ /ratlperl/) {
     $opts{dynamic_lib}={ OTHERLDFLAGS => 
-			     ' -ucmdsyn_proc_table -rpath '.
+			     ' -ucmdsyn_proc_table -Wl,-rpath,'.
 			      $ATRIA_ROOT.
 			      '/shlib:.:'.
 			       $inst_lib
 		       };
+    } else {
+    $opts{dynamic_lib}={ OTHERLDFLAGS => 
+                             ' -ucmdsyn_proc_table -rpath '.
+                              $ATRIA_ROOT.
+                              '/shlib:.:'.
+                               $inst_lib
+                       };
+    }
 
 }elsif  ($os =~ /hpux/){
 
@@ -125,18 +141,22 @@ if ($os =~ /solaris/){
 	unless $ctver;
     $osver = `uname -r`;chomp $osver;
     $osver =~ s/^[A-Z]\.//;print "OSVER $osver\n";
-    $opts{LIBS} =  $opts{LIBS}.' -lperl -lperlDynaLoader ' if $ctver < 5;
+    $opts{LIBS} ="-L/usr/lib ". $opts{LIBS}.' -lperl -lperlDynaLoader ' if $ctver < 5;
     if ($osver == 10.20){
 	print "HPUX-10.20\n";
 	$opts{LIBS} =  $opts{LIBS}.'-lcurses -lM -lezrpc  -lrpcsvc -lsec -lstd -lstream -lcl -lc   -ldld ';
 	$opts{DEFINE}= $opts{DEFINE}.'-DATRIA_HPUX10';
 	$opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -lCsup'};
-    }elsif(11 <= $osver && $osver <= 11.11 ){
+    }elsif(11 <= $osver ){
 	print "HPUX-11\n";
-	$opts{LIBS} =  $opts{LIBS}.'-lcurses -lM -lezrpc  -lrpcsvc -lsec -lstd -lstream -ldld -lCsup';
-	$opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -l:libcl.0  -l:libc.0 '};
+        if ($Config{perl} =~ /ratlperl/) {
+            $opts{LIBS} = "-L/usr/lib ". $opts{LIBS}.'-lcurses -lrpcsvc -lHcurses ';
+        }else{
+        $opts{LIBS} =  $opts{LIBS}.'-lcurses -lrpcsvc -lHcurses ';
+        $opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -l:libcl.0  -l:libc.0 '};
+        }
     }else{
-    }
+    }    
 
 }elsif  ($os =~ /MSWin32/ || $os =~ /Windows/){
     die 
@@ -167,6 +187,11 @@ if ($os =~ /solaris/){
 			' -ver',
 			1
 			);
+    $opts{LIBS} = "-L/usr/lib ". $opts{LIBS};
+    if ($Config{perl} =~ /ratlperl/) {
+    $opts{LDDLFLAGS} = $Config{lddlflags};
+    $opts{LDDLFLAGS} =~ s/blibpath:/blibpath:$ATRIA_ROOT\/shlib:/;
+    }
 }else{print "Unsupported Platform\n"}
 
 $opts{LIBS} .= ' -latriamsadm -latriamsinfobase -latriamsinfovob' if $ctver >= 6;
@@ -181,19 +206,50 @@ sub CheckVer{
     $prog_output = `$prog_output`;
     $prog_output =~ /$expected_string\s*(\d+\.\d+\.?\d*)/i;
     $found_level = $1;
+    @minversion = split('\.',$level);
+    $minversize = @minversion;    
+#
+# The output of the cleartool -ver command has changed.
+# An earlier version looks like 2003.06.00 while a later version
+# looks like 7.0.0.   We need to be able to handle both styles. 
+# The trailing flag means that the version trails the year so we
+# need to remove the year.  That is no longer always true so we
+# need to test to see if the year is first, if it is not the we
+# have to turn off the trailing flag. 
+    if($trailing){
+    if($found_level !~ /200/) {
+    $trailing = 0;
+    }
+    }
+
     if($trailing){
 	$found_level =~ s/\d+\.(\d+\.\d+)/$1/;
     }else{
 	$found_level =~ s/(\d+\.\d+)\.\d+/$1/;
     }
+    @foundversion = split('\.',$found_level);
+    $foundversionsize = @foundversion;
     my $ans = Found;
     $ans = 'Not Found' unless $1;
     print "Looking for $expected_string\t$level\t$ans\t$found_level\n";
-    if ($found_level >= $level){
-	return 	$found_level;
+
+    if ($minversize >= $foundversionsize){
+       $numcompare=$foundversionsize;
     }else{
-	return 0;	
+        $numcompare = $minversize;
     }
+
+    for ($i = 0; $i < $numcompare; $i++)
+        {
+           if ($foundversion[$i] > $minversion[$i]){
+                return  $found_level;
+           }else{   
+                if ($foundversion[$i] < $minversion[$i]){ 
+                   return 0;
+                }
+           }
+     }
+     return  $found_level;
 }
 
 
