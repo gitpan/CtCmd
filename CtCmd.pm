@@ -23,7 +23,7 @@ require AutoLoader;
 
 @ISA = qw(Exporter DynaLoader);
 @EXPORT_OK = qw(cleartool);
-$ClearCase::CtCmd::VERSION = '1.04';
+$ClearCase::CtCmd::VERSION = '1.06';
 bootstrap ClearCase::CtCmd $VERSION;
 
 

@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2002, 2005 All rights reserved.            #
+# © Copyright IBM Corporation 2002, 2006 All rights reserved.            #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -11,7 +11,7 @@
 #                                                                        #
 ##########################################################################
 
-1.05  Due to changes in release 7 (Baltic) librpcsoc.so is no longer used.
+1.06  Due to changes in release 7 (Baltic) librpcsoc.so is no longer used.
       This change affects only Solaris implementations of CtCmd as 
       librpcsoc.so was only used for Solaris.  This means that release 7
       does not need the aux_zuba.c and the SolarisInterposer code.  Because
