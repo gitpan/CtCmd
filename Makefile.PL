@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2001, 2006. All rights reserved.           #
+# (C) Copyright IBM Corporation 2001, 2009. All rights reserved.         #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -35,7 +35,7 @@ $os=$Config{osname};  #why not $^O ?
 my %opts = (
 	    'NAME'	=> $name,
 	    'VERSION_FROM' => 'CtCmd.pm', # finds $VERSION
-	    'LIBS' =>' -L. -L'.$ATRIA_ROOT.'/shlib -latriacmdsyn  -latriacmd -latriasumcmd -latriasum -latriamsadm -latriamntrpc -latriacm -latriavob -latriaview -latriacm -latriadbrpc -latriatirpc -latriaxdr -latriamvfs -latriatbs -latriaadm -latriasplit -latriacredmap -latriaks  -lezrpc  -lrpcsvc  -latriaccfs -latriasquidad  -latriasquidcore '
+	    'LIBS' =>' -L. -L'.$ATRIA_ROOT.'/shlib -latriacmdsyn  -latriacmd -latriasumcmd -latriasum -latriamsadm -latriamntrpc -latriacm -latriavob -latriaview -latriacm -latriadbrpc -latriaxdr -latriamvfs -latriatbs -latriaadm -latriasplit -latriacredmap -latriaks  -lezrpc  -lrpcsvc  -latriaccfs -latriasquidad  -latriasquidcore '
 	    );
 
 
@@ -96,7 +96,7 @@ if ($os =~ /solaris/){
     $opts{INC}	= '-I. ';
     $opts{dynamic_lib} = { OTHERLDFLAGS => '-Lblib/arch/auto/ClearCase/CtCmd -t -ucmdsyn_proc_table  -R$(ATRIA_ROOT)/shlib  -R$(INSTALLSITEARCH)/auto/$(FULLEXT)  -R$(INSTALLSITELIB)/auto/$(FULLEXT) -R$(INST_ARCHLIB)/auto/$(FULLEXT) '} ;
 }elsif ($os =~ /linux/){
-    $opts{LD} = "ld";
+    $opts{LD} = $Config{ld};
     die 'Cannot find  '.$Config{cc}  
 	unless CheckVer('version',
 			2.7,
@@ -113,7 +113,7 @@ if ($os =~ /solaris/){
     $opts{DEFINE}= $opts{DEFINE}.'-DATRIA_LINUX';
     $opts{INC}='-I. ';
     $opts{LIBS} ="-L/usr/lib ". $opts{LIBS}.' -lc -lcurses'; 
-    if ($Config{perl} =~ /ratlperl/) {
+    if ($Config{perl} =~ /ratlperl/ || $opts{LD} ne "ld") {
     $opts{dynamic_lib}={ OTHERLDFLAGS => 
 			     ' -ucmdsyn_proc_table -Wl,-rpath,'.
 			      $ATRIA_ROOT.

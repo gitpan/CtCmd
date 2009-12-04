@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2001, 2007 All rights reserved.            #
+# © Copyright IBM Corporation 2001, 2008 All rights reserved.            #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -55,6 +55,12 @@ may be consulted for an indication of how ClearCase::CtCmd may be used.
 When the MVFS is not installed, e. g. with ClearCase LT, it is not possible
 to "make test".  However, in most cases, passing directly from a
 successful "make" to "make install" will be satisfactory.
+
+CtCmd extracts various parameters from the perl config file. This
+includes the compiler and the compiler/linker flags.  If you are
+building this on a different compiler than the compiler that perl
+was built with, you need to override the compiler and linker options/flags.
+perl Makefile.PL CC=gcc <appropriate flags>= .
 
 __________________________________________
 

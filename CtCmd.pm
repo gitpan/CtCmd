@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2001, 2004 All rights reserved.            #
+# © Copyright IBM Corporation 2001, 2009 All rights reserved.            #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -23,7 +23,7 @@ require AutoLoader;
 
 @ISA = qw(Exporter DynaLoader);
 @EXPORT_OK = qw(cleartool);
-$ClearCase::CtCmd::VERSION = '1.06';
+$ClearCase::CtCmd::VERSION = '1.07';
 bootstrap ClearCase::CtCmd $VERSION;
 
 
