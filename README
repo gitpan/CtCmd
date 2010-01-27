@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2002, 2007. All rights reserved.           #
+# © Copyright IBM Corporation 2002, 20010 All rights reserved.           #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -12,9 +12,12 @@
 ##########################################################################
 
  
-ClearCase::CtCmd is an interface to Rational ClearCase.  For support, 
+ClearCase::CtCmd is an interface to IBM Rational ClearCase.  For support, 
 contact support@rational.com.  For installation instructions, see
 INSTALL.
+
+ClearCase::CtCmd is supported on all platforms that IBM Rational ClearCase
+supports.
 
 
 ##########################################################################
@@ -47,15 +50,17 @@ an invocation of ClearCase::CtCmd::exec.
 
 ##########################################################################
 #                                                                        #
-# Limitations - libperl.so                                               #
+# Limitations                                                            #
 #                                                                        #
 ##########################################################################
 
+# libperl.so
 
 On Solaris and presumably other Unix/Linux, 
 /usr/atria/shlib/libperl.<shared object extension> on ClearCase v5.0 
 can conflict with the user's perl installation if the user's perl is built 
 as a wrapper around  a shared object of the same name, e. g., "libperl.so". 
+With IBM Rational ClearCase v6.x and newer, the perl library is name libratlperl.so, removing this conflict.
 
 Workarounds:
 
@@ -105,3 +110,16 @@ LD_RUN_PATH="/usr/atria/shlib:/usr/lib:/var/tmp/CtCmd" ld  -G -L/usr/atria/shlib
     Directories will have to be created. 
 
 
+# AIX
+
+On AIX platforms, with IBM Rational ClearCase v7.x, you must edit 
+/usr/opt/perl5/lib[64]/5.8.2/aix-thread-multi/Config.pm and change
+
+lib_ext = ".a"
+
+to
+
+lib_ext = ".so"
+
+before doing "perl Makefile.PL", otherwise perl will look for libraries 
+with the ".a" extension.

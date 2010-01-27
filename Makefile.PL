@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# (C) Copyright IBM Corporation 2001, 2009. All rights reserved.         #
+# (C) Copyright IBM Corporation 2001, 2010. All rights reserved.         #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -187,11 +187,9 @@ if ($os =~ /solaris/){
 			' -ver',
 			1
 			);
-    $opts{LIBS} = "-L/usr/lib ". $opts{LIBS};
-    if ($Config{perl} =~ /ratlperl/) {
-    $opts{LDDLFLAGS} = $Config{lddlflags};
+    $opts{LIBS} = "-L/usr/lib -L/lib ". $opts{LIBS} . " " . $Config{LIBS};
+    $opts{LDDLFLAGS} = $Config{lddlflags} ." -brtl -bshared ";
     $opts{LDDLFLAGS} =~ s/blibpath:/blibpath:$ATRIA_ROOT\/shlib:/;
-    }
 }else{print "Unsupported Platform\n"}
 
 $opts{LIBS} .= ' -latriamsadm -latriamsinfobase -latriamsinfovob' if $ctver >= 6;
