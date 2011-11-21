@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2001, 2004. All rights reserved.           #
+# © Copyright IBM Corporation 2001, 2011. All rights reserved.           #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -121,7 +121,7 @@ sub set_config_spec
     # my $trace();
     my $this  = shift;
     my $cspec = shift;
-    my $tmpfile = "/tmp/cs$$";
+    my $tmpfile = "$CC::CC::tmp_dir/cs$$";
     my $st;
 
     open(TMPCS, ">$tmpfile") || die("Can't open temp file");

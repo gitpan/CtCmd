@@ -24,7 +24,7 @@ $| = 1;
 
 $debug = $ENV{AUTODEF_DEBUG};
 
-open(CONFIG, $ARGV[0])||die "Missing conf files\n";
+open(CONFIG, $ARGV[0])||die "Missing conf file $ARGV[0]\n";
 while(<CONFIG>){
     chop $_;
     $_ || next;

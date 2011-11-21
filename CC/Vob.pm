@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2001, 2004. All rights reserved.           #
+# © Copyright IBM Corporation 2001, 2011. All rights reserved.           #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -60,10 +60,9 @@ sub create
     # Mount VOB.
 
     if ($mount) {
-	#xchen: handle win32
-	if($^O !~/Win/){
-	    system('/bin/mkdir', $vob->tag()) && die("Can't create VOB mount dir");
-	}
+		if(!$CC::CC::is_windows) {
+	    	system('/bin/mkdir', '-p', $vob->tag()) && die("Can't create VOB mount dir");
+		}
         ClearCase::CtCmd::exec('mount', $vob->tag());
     }
 

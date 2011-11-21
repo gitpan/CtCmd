@@ -1,6 +1,6 @@
 /*************************************************************************
 *                                                                        *
-* © Copyright IBM Corporation 2001, 2004 All rights reserved.            *
+* © Copyright IBM Corporation 2001, 2011 All rights reserved.            *
 *                                                                        *
 * This program and the accompanying materials are made available under   *
 * the terms of the Common Public License v1.0 which accompanies this     *
@@ -26,16 +26,61 @@ extern "C" {
 }
 #endif
 
+/* The following is borrowed from tbs_version_id.h */
+#if defined(__cplusplus)
+#define PVI_NAME(a) a ## _print_verid
+#define TBS_DECL_VER_PRINT_VERID(component_sym) \
+extern "C" int PVI_NAME(component_sym) (void);
+#define TBS_VER_PRINT_VERID(component_sym) \
+     PVI_NAME(component_sym) ();
+
+#if 0
+TBS_DECL_VER_PRINT_VERID (CtCmd);
+#endif
+TBS_DECL_VER_PRINT_VERID (libatriaadm);
+TBS_DECL_VER_PRINT_VERID (libatriaccfs);
+TBS_DECL_VER_PRINT_VERID (libatriacm);
+TBS_DECL_VER_PRINT_VERID (libatriacmd);
+TBS_DECL_VER_PRINT_VERID (libatriacmdsyn);
+TBS_DECL_VER_PRINT_VERID (libatriacredmap);
+TBS_DECL_VER_PRINT_VERID (libatriadbrpc);
+TBS_DECL_VER_PRINT_VERID (libatriaks);
+TBS_DECL_VER_PRINT_VERID (libatriamsadm);
+TBS_DECL_VER_PRINT_VERID (libatriamsinfobase);
+TBS_DECL_VER_PRINT_VERID (libatriamvfs);
+TBS_DECL_VER_PRINT_VERID (libatriasquidad);
+TBS_DECL_VER_PRINT_VERID (libatriasquidcore);
+TBS_DECL_VER_PRINT_VERID (libatriasum);
+TBS_DECL_VER_PRINT_VERID (libatriasumcmd);
+TBS_DECL_VER_PRINT_VERID (libatriatbs);	
+TBS_DECL_VER_PRINT_VERID (libatriaview);
+TBS_DECL_VER_PRINT_VERID (libatriavob);
+TBS_DECL_VER_PRINT_VERID (libatriaxdr);
+#ifndef ATRIA_WIN32_COMMON 
+TBS_DECL_VER_PRINT_VERID (libatriamntrpc);
+TBS_DECL_VER_PRINT_VERID (libatriasplit);
+#endif
+
+#elif defined(__STDC__) || defined(_MSC_EXTENSIONS)
+#define PVI_NAME(a) a ## _print_verid
+#define TBS_VER_PRINT_VERID(component_sym) \
+    {extern int PVI_NAME(component_sym) (void); \
+     PVI_NAME(component_sym) (); }
+
+#else
+#define TBS_VER_PRINT_VERID(component_sym) \
+    {extern int component_sym/**/_print_verid(); \
+     component_sym/**/_print_verid(); }
+#endif
+
 #include "proc_table.h"
 #if defined ATRIA_WIN32_COMMON 
 #include <stdio.h>
 #include <stdlib.h>
 #endif
 
-
 static int
-not_here(s)
-char *s;
+not_here(char *s)
 {
     croak("%s not implemented on this architecture", s);
     return -1;
@@ -184,6 +229,47 @@ int
 cmdstat()
   CODE:
 	RETVAL = status;
+  OUTPUT:
+	RETVAL
+
+int
+version()
+  CODE:
+	/*
+	 * This method has the side effect of explicitly referencing
+	 * all of the libraries that are needed at runtime. Since CtCmd.so
+	 * is dynamically loaded into perl it is highly likely that the
+	 * CC core libraries haven't been loaded. So a mechanism is needed
+	 * to cause the linker to build in the full list of libraries
+	 * that need to be loaded when CtCmd.so is loaded.
+	 */
+#if 0 /* Can't use since we can't use the CppPerlSharedLibRulePlusLibsVer linker macro on windows */
+	TBS_VER_PRINT_VERID (CtCmd);
+#endif
+	TBS_VER_PRINT_VERID (libatriaadm);
+	TBS_VER_PRINT_VERID (libatriaccfs);
+	TBS_VER_PRINT_VERID (libatriacm);
+	TBS_VER_PRINT_VERID (libatriacmd);
+	TBS_VER_PRINT_VERID (libatriacmdsyn);
+	TBS_VER_PRINT_VERID (libatriacredmap);
+	TBS_VER_PRINT_VERID (libatriadbrpc);
+	TBS_VER_PRINT_VERID (libatriaks);
+	TBS_VER_PRINT_VERID (libatriamsadm);
+	TBS_VER_PRINT_VERID (libatriamsinfobase);
+	TBS_VER_PRINT_VERID (libatriamvfs);
+	TBS_VER_PRINT_VERID (libatriasquidad);
+	TBS_VER_PRINT_VERID (libatriasquidcore);
+	TBS_VER_PRINT_VERID (libatriasum);
+	TBS_VER_PRINT_VERID (libatriasumcmd);
+	TBS_VER_PRINT_VERID (libatriatbs);	
+	TBS_VER_PRINT_VERID (libatriaview);
+	TBS_VER_PRINT_VERID (libatriavob);
+	TBS_VER_PRINT_VERID (libatriaxdr);
+#ifndef ATRIA_WIN32_COMMON
+	TBS_VER_PRINT_VERID (libatriamntrpc);
+	TBS_VER_PRINT_VERID (libatriasplit);
+#endif
+	RETVAL = 1;
   OUTPUT:
 	RETVAL
 

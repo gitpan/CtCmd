@@ -18,6 +18,7 @@
 $| = 1;
 
 use ClearCase::CtCmd;
+ClearCase::CtCmd::version();
 $x = ClearCase::CtCmd->new();
 $OS = &os_test;
 use Test;
@@ -201,23 +202,23 @@ sub createArch{
     die "must be able to make component" unless ok(0,$x->status,"$aa[2]"); 
 
     print STDERR "\n--- mkfolder level  first ---\n";
-    @aa = $x->exec('mkfolder','-nc','-title', $folders[0],'-in',("RootFolder@" . $pvobNameFP),($folders[0]. '@' . $pvobNameFP));
+    @aa = $x->exec('mkfolder','-nc','-in',("RootFolder@" . $pvobNameFP),($folders[0]. '@' . $pvobNameFP));
     die "must be able to make folder 0" unless ok(0,$x->status,"$aa[2]"); 
 
     print STDERR "\n--- mkfolder level 1 second ---\n";
-    @aa = $x->exec('mkfolder','-nc','-title', $folders[1],'-in',("RootFolder@" . $pvobNameFP),($folders[1] . '@' . $pvobNameFP));
+    @aa = $x->exec('mkfolder','-nc','-in',("RootFolder@" . $pvobNameFP),($folders[1] . '@' . $pvobNameFP));
     die "must be able to make folder 1" unless ok(0,$x->status,"$aa[2]"); 
 
     print STDERR "\n--- mkfolder flevel 1 within $folders[1] ---\n";
-    @aa = $x->exec('mkfolder','-nc','-title', $folders[2],'-in',($folders[1] . '@' . $pvobNameFP),($folders[2] . '@' . $pvobNameFP));
+    @aa = $x->exec('mkfolder','-nc','-in',($folders[1] . '@' . $pvobNameFP),($folders[2] . '@' . $pvobNameFP));
     die "must be able to make folder 2" unless     ok(0,$x->status,"$aa[2]"); 
 
     print STDERR "\n--- mkfolder level 2 within $folders[1] ---\n";
-    @aa = $x->exec('mkfolder','-nc','-title', $folders[3],'-in',($folders[1] . '@' . $pvobNameFP),($folders[3] . '@' . $pvobNameFP));
+    @aa = $x->exec('mkfolder','-nc','-in',($folders[1] . '@' . $pvobNameFP),($folders[3] . '@' . $pvobNameFP));
     die "must be able to make folder 3" unless     ok(0,$x->status,"$aa[2]"); 
 
     print STDERR "\n--- mkfolder level 3 within $folders[3] ---\n";
-    @aa = $x->exec('mkfolder','-nc','-title', $folders[4],'-in',($folders[3] . '@' . $pvobNameFP),($folders[4] . '@' . $pvobNameFP));
+    @aa = $x->exec('mkfolder','-nc','-in',($folders[3] . '@' . $pvobNameFP),($folders[4] . '@' . $pvobNameFP));
     die "must be able to make folder 4" unless     ok(0,$x->status,"$aa[2]"); 
 
     print STDERR "\n--- mkproject $projName---\n";
@@ -238,11 +239,11 @@ sub createArch{
 
 
     print STDERR "\n--- mkstream integration stream: $streamInt ---\n";
-    @aa = $x->exec('mkstream', '-title', $streamInt ,'-integration', '-baseline',$baseline, '-in',($projName . '@' . $pvobNameFP), ($streamInt . '@' . $pvobNameFP));
+    @aa = $x->exec('mkstream','-integration', '-baseline',$baseline, '-in',($projName . '@' . $pvobNameFP), ($streamInt . '@' . $pvobNameFP));
     die "must be able to make stream" unless  ok(0,$x->status,"$aa[2]");
 
     print STDERR "\n--- mkstream dev stream: $streamDev ---\n";
-    @aa = $x->exec('mkstream', '-title', $streamDev, '-baseline', $baseline, '-in',($projName . '@' . $pvobNameFP), ($streamDev . '@' . $pvobNameFP) );
+    @aa = $x->exec('mkstream','-baseline', $baseline, '-in',($projName . '@' . $pvobNameFP), ($streamDev . '@' . $pvobNameFP) );
     die "must be able to make stream" unless  ok(0,$x->status,"$aa[2]");
 
     print STDERR "\n--- mkview integration view: $intViewName ---\n";
@@ -318,25 +319,17 @@ sub mkTmpStg{
     system('net share /del CtCmdTmp') if $rv =~ /CtCmdTmp/;
     $rv = 0;
     if(!(-d ($rv=$prefix_1.$tmp_dir_name))){
-	die "Unable to make temporary directory $prefix_1.$tmp_dir_name  " 
-	    unless mkdir($rv = $prefix_1.$tmp_dir_name,0644)  ;
-	print STDERR "---Created temporary directory $rv ---\n";
-	$x= system('net share CtCmdTmp='.$rv);
-	if($x){
-	    die "Unable to net share CtCmdTmp=$rv"
-	}else{
-	    $servStgVob = "\\\\$ENV{'COMPUTERNAME'}\\"."CtCmdTmp";
-	    $servStgView = "\\\\$ENV{'COMPUTERNAME'}\\"."CtCmdTmp";
-	}
-    }else{
-	$x=system('net share CtCmdTmp='.$rv);
-	if($x){
-	    die "Unable to net share CtCmdTmp=$rv"
-	}else{
-	    $servStgVob = "\\\\$ENV{'COMPUTERNAME'}\\"."CtCmdTmp";
-	    $servStgView = "\\\\$ENV{'COMPUTERNAME'}\\"."CtCmdTmp";
-	}
+		die "Unable to make temporary directory $prefix_1.$tmp_dir_name  " 
+	    	unless mkdir($rv = $prefix_1.$tmp_dir_name,0644)  ;
+		print STDERR "---Created temporary directory $rv ---\n";
     }
+	$x=system(qq(net share "CtCmdTmp=$rv" /grant:$ENV{USERDOMAIN}\\$ENV{USERNAME},FULL));
+	if($x){
+	    die "Unable to net share CtCmdTmp=$rv"
+	}else{
+	    $servStgVob = "\\\\$ENV{'COMPUTERNAME'}\\"."CtCmdTmp";
+	    $servStgView = "\\\\$ENV{'COMPUTERNAME'}\\"."CtCmdTmp";
+	}
 }
 
 sub getStgVob{

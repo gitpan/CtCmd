@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2002, 20010All rights reserved.            #
+# (C) Copyright IBM Corporation 2002, 2011 All rights reserved.          #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -11,6 +11,13 @@
 #                                                                        #
 ##########################################################################
 
+1.09  Added a version() subroutine to CtCmd that produces output similar to
+      cleartool -verall. This insures that all of the ClearCase core libraries
+      will be dynamically loaded when CtCmd is dynamically loaded. Fixed 
+      handling of the temporary directory setting in the CC.pm module on 
+      Windows. Fixes to the mkfolder and mkstream tests in t1_createArch.t.
+      Also this version is included by default in the 8.0 release of 
+      ClearCase.
 1.08  Added support for AIX 6.x
       This change affects building CtCmd on AIX platforms only.  Changes to
       IBM Rational ClearCase versions 7.0.x and 7.1.x require updating the

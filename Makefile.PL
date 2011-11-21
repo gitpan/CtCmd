@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# (C) Copyright IBM Corporation 2001, 2010. All rights reserved.         #
+# (C) Copyright IBM Corporation 2001, 2011. All rights reserved.         #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -10,10 +10,56 @@
 # William Spurlin - Initial version and framework                        #
 #                                                                        #
 # Xue-Dong Chen - Maintenance and defect fixes                           #
+# Max Vohlken - Maintenance and defect fixes                             #
 #                                                                        #
 ##########################################################################
 
 use ExtUtils::MakeMaker;
+use File::Basename;
+
+BEGIN {
+	# On Windows fix the Config.pm based on where ratlperl is installed.
+	if($^O =~ /MSWin32/ || $^O =~ /Windows/) {
+		eval "use Win32;";
+		my $p = $^X;
+		if(basename($p) =~ /^ratlperl(\.exe)?$/) {
+			my $i = dirname($p);
+			$i = Win32::GetShortPathName($i);
+			my $modified = 0;
+			my $conf;
+			my @conf;
+			my @conf_orig;
+			for(@INC) {
+				if(open(CONF, "$_/Config.pm")) {
+					$conf = "$_/Config.pm";
+					@conf_orig = <CONF>;
+					close(CONF);
+					@conf = @conf_orig;
+					for(@conf) {
+						if(s/\Q\public\ratlperl\5.8.6\nt_i386\E/$i/g) {
+							$modified = 1;
+						}
+					}
+				}
+			}
+			if($conf ne '' and $modified) {
+				if(open(CONF, ">$conf")) {
+					# If we are able to write to the Config.pm then save
+					# a copy of the original as Config.pm.orig.
+					if(open(CONF, ">$conf.orig")) {
+						print CONF @conf_orig;
+						close(CONF);
+					}
+					print CONF @conf;
+					close(CONF);
+				} else {
+					print "Unable to fix incorrect settings in $conf: $!\n";
+				}
+			}
+		}
+	}
+}
+
 use Config;
 
 # To override ExtUtils::MM_Unix methods:
@@ -23,21 +69,30 @@ use Config;
 # overriding of these methods.
 # "use" will not work here as it has an implicit "BEGIN".
 
+my $os=$Config{osname};  #why not $^O ?
+
 my $archlib=$Config{archlib};
 my $name=ClearCase::CtCmd;
 my $inst_lib=$archlib.'/auto/'.$name;
-my $ATRIA_ROOT=$ENV{ATRIA_ROOT}?$ENV{ATRIA_ROOT}:"/usr/atria"; 
+my $ATRIA_ROOT=$ENV{ATRIA_ROOT}?$ENV{ATRIA_ROOT}:"/opt/rational/clearcase"; 
 my $cleartool = $ATRIA_ROOT.'/bin/cleartool';
+$cleartool = 'cleartool' if($os =~ /MSWin32/ || $os =~ /Windows/);
 my $osver;
 
-$os=$Config{osname};  #why not $^O ?
+die "Cannot find ClearCase 7.0 or higher or cannot find $cleartool" 
+unless $ctver = CheckVer('ClearCase version',
+		7.0,
+		$cleartool.' -ver',
+		1
+		);
 
 my %opts = (
 	    'NAME'	=> $name,
 	    'VERSION_FROM' => 'CtCmd.pm', # finds $VERSION
-	    'LIBS' =>' -L. -L'.$ATRIA_ROOT.'/shlib -latriacmdsyn  -latriacmd -latriasumcmd -latriasum -latriamsadm -latriamntrpc -latriacm -latriavob -latriaview -latriacm -latriadbrpc -latriaxdr -latriamvfs -latriatbs -latriaadm -latriasplit -latriacredmap -latriaks  -lezrpc  -lrpcsvc  -latriaccfs -latriasquidad  -latriasquidcore '
+	    'LIBS' =>' -L. -L'.$ATRIA_ROOT.'/shlib -latriacmdsyn -latriacmd -latriasumcmd -latriasum -latriamsadm -latriacm -latriavob -latriaview -latriacm -latriadbrpc -latriaxdr -latriamvfs -latriatbs -latriaadm -latriacredmap -latriaks -lezrpc -lrpcsvc -latriaccfs -latriasquidad -latriasquidcore -latriamsadm -latriamsinfobase -latriamsinfovob'
 	    );
 
+$opts{LIBS} .= ' -latriasplit -latriamntrpc' unless($os =~ /MSWin32/ || $os =~ /Windows/);
 
 if ($os =~ /solaris/){
 	my($esp_str,$esp_ver,$flag_rd);
@@ -71,30 +126,15 @@ if ($os =~ /solaris/){
 			$esp_ver,
 			$default_compiler.$flag_rd
 			);
-    die "Cannot find ClearCase 4.1 or higher or cannot find $cleartool" 
-	unless $ctver = CheckVer('ClearCase version',
-			4.1,
-			$cleartool.' -ver',
-			1
-			);
     die "CtCmd requires Solaris 2.7 or higher"
 	unless CheckVer("SunOS",
 			5.7,
 			'uname -sr'
 			);
-    if ( CheckVer('ClearCase version',
-                        7.0,
-                        $cleartool.' -ver',
-                        1)) {
-    $opts{MYEXTLIB}=' ';
-    } else {
-    require 'SolarisInterposer'; 
-    $opts{MYEXTLIB}='-lzuba';
-    }
-    $opts{LIBS} ="-L/usr/lib ". $opts{LIBS}.'  -lc  -lw -lCrun'." -R$ATRIA_ROOT/shlib";
+    $opts{LIBS} ="-L/usr/lib $opts{LIBS} -lratlssl -lc -lw -lCstd -lCrun -R$ATRIA_ROOT/shlib";
     $opts{DEFINE}	= $opts{DEFINE}.'-DSVR4';
     $opts{INC}	= '-I. ';
-    $opts{dynamic_lib} = { OTHERLDFLAGS => '-Lblib/arch/auto/ClearCase/CtCmd -t -ucmdsyn_proc_table  -R$(ATRIA_ROOT)/shlib  -R$(INSTALLSITEARCH)/auto/$(FULLEXT)  -R$(INSTALLSITELIB)/auto/$(FULLEXT) -R$(INST_ARCHLIB)/auto/$(FULLEXT) '} ;
+    $opts{dynamic_lib} = { OTHERLDFLAGS => "-Lblib/arch/auto/ClearCase/CtCmd -t -ucmdsyn_proc_table  -R$ATRIA_ROOT/shlib" . ' -R$(INSTALLSITEARCH)/auto/$(FULLEXT)  -R$(INSTALLSITELIB)/auto/$(FULLEXT) -R$(INST_ARCHLIB)/auto/$(FULLEXT) '} ;
 }elsif ($os =~ /linux/){
     $opts{LD} = $Config{ld};
     die 'Cannot find  '.$Config{cc}  
@@ -105,14 +145,9 @@ if ($os =~ /solaris/){
 	       CheckVer('version egcs-',
 			2.7,$Config{cc}.' -v 2>&1'
 		       );
-    die "Cannot find ClearCase 4.1 or higher or cannot find $cleartool" 
-	unless $ctver = CheckVer('ClearCase version',
-			4.1,
-			$cleartool.' -ver',1
-			);
     $opts{DEFINE}= $opts{DEFINE}.'-DATRIA_LINUX';
     $opts{INC}='-I. ';
-    $opts{LIBS} ="-L/usr/lib ". $opts{LIBS}.' -lc -lcurses'; 
+    $opts{LIBS} ="-L/usr/lib $opts{LIBS} -lc -lncurses"; 
     if ($Config{perl} =~ /ratlperl/ || $opts{LD} ne "ld") {
     $opts{dynamic_lib}={ OTHERLDFLAGS => 
 			     ' -ucmdsyn_proc_table -Wl,-rpath,'.
@@ -131,30 +166,30 @@ if ($os =~ /solaris/){
 
 }elsif  ($os =~ /hpux/){
 
-    $ctver = CheckVer(
-				       'ClearCase version',
-				       4.1,
-				       $cleartool.' -ver',
-				       1
-				       );
-    die "Cannot find ClearCase 4.1 or higher or cannot find $cleartool" 
-	unless $ctver;
     $osver = `uname -r`;chomp $osver;
     $osver =~ s/^[A-Z]\.//;print "OSVER $osver\n";
-    $opts{LIBS} ="-L/usr/lib ". $opts{LIBS}.' -lperl -lperlDynaLoader ' if $ctver < 5;
+	$mach = `uname -m`; chomp $mach;
     if ($osver == 10.20){
 	print "HPUX-10.20\n";
-	$opts{LIBS} =  $opts{LIBS}.'-lcurses -lM -lezrpc  -lrpcsvc -lsec -lstd -lstream -lcl -lc   -ldld ';
-	$opts{DEFINE}= $opts{DEFINE}.'-DATRIA_HPUX10';
+	$opts{LIBS} =  "$opts{LIBS} -lcurses -lM -lezrpc -lrpcsvc -lsec -lstd -lstream -lcl -lc -ldld";
+	$opts{DEFINE}= $opts{DEFINE}.' -DATRIA_HPUX10';
 	$opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -lCsup'};
     }elsif(11 <= $osver ){
-	print "HPUX-11\n";
-        if ($Config{perl} =~ /ratlperl/) {
-            $opts{LIBS} = "-L/usr/lib ". $opts{LIBS}.'-lcurses -lrpcsvc -lHcurses ';
-        }else{
-        $opts{LIBS} =  $opts{LIBS}.'-lcurses -lrpcsvc -lHcurses ';
-        $opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -l:libcl.0  -l:libc.0 '};
-        }
+		print "HPUX-11\n";
+		if ($Config{perl} =~ /ratlperl/) {
+			if($mach eq 'ia64') {
+				$opts{LIBS} = "-L/usr/lib/hpux32 $opts{LIBS}";
+			} else {
+				$opts{LIBS} = "-L/usr/lib $opts{LIBS}";
+			}
+			$opts{LDFLAGS}=$Config{ldflags};
+			$opts{LDFLAGS} =~ s!\-Wl,\+b!-Wl,+b/opt/rational/clearcase/shlib:!g;
+			$opts{LDDLFLAGS}=$Config{lddlflags};
+			$opts{LDDLFLAGS} =~ s!\-Wl,\+b!-Wl,+b/opt/rational/clearcase/shlib:!g;
+		}else{
+			#$opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -l:libcl.0  -l:libc.0 '};
+		}
+		$opts{LIBS} .= " -lc -lstd_v2 -lCsup -lcurses -lrpcsvc -lsec";
     }else{
     }    
 
@@ -164,35 +199,21 @@ if ($os =~ /solaris/){
 	.$Config{cc}.
 	' -> Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 12'  
 		unless CheckVer('Version',12,$Config{cc}.' 2>&1' );
-    die 
-	"Cannot find ClearCase 4.2 or higher or cannot find cleartool in PATH" 
-	    unless $ctver = CheckVer(
-			    'ClearCase version',
-			    4.2,
-			    'cleartool -ver',
-			    1
-			    );
     $opts{CCFLAGS} = $Config{ccflags}.' -DATRIA_WIN32_COMMON';
-    $opts{LIBS}='/defaultlib:cmdsyn.lib /defaultlib:ks.lib /defaultlib:vob.lib  "/defaultlib:WS2_32.LIB"';
-    $opts{MYEXTLIB}='cmdsyn.lib ks.lib vob.lib';
+	while($opts{LIBS} =~ /-l(atria[^ ]+)/g) {
+		my $lib = $1;
+		system($^X, 'autoDef', "win32/$lib.conf") 
+		|| system($Config{'ar'}, '/nologo', '/machine:i386', "/def:$lib.def");
+	}
+    #$opts{LIBS}.=' /defaultlib:WS2_32.LIB';
     $opts{LDDLFLAGS}=$Config{lddlflags};
     $opts{LDDLFLAGS} =~ s/-nodefaultlib//;
     require 'Win32C_O';
 }elsif ($os =~ /AIX/i){
-    die "Cannot find ClearCase 4.1 or higher or cannot find $cleartool" 
-	unless $ctver = CheckVer(
-			'ClearCase version',
-			4.1,
-			$cleartool.
-			' -ver',
-			1
-			);
-    $opts{LIBS} = "-L/usr/lib -L/lib ". $opts{LIBS} . " " . $Config{LIBS};
+    $opts{LIBS} = "-L/usr/lib -L/lib $opts{LIBS} $Config{LIBS}";
     $opts{LDDLFLAGS} = $Config{lddlflags} ." -brtl -bshared ";
     $opts{LDDLFLAGS} =~ s/blibpath:/blibpath:$ATRIA_ROOT\/shlib:/;
 }else{print "Unsupported Platform\n"}
-
-$opts{LIBS} .= ' -latriamsadm -latriamsinfobase -latriamsinfovob' if $ctver >= 6;
 
 WriteMakefile(%opts);
 

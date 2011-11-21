@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# © Copyright IBM Corporation 2001, 2004. All rights reserved.           #
+# © Copyright IBM Corporation 2001, 2011. All rights reserved.           #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -36,12 +36,15 @@ use CC::Vob;
 #use Trace;
 use ClearCase::CtCmd;
 
+$CC::CC::is_windows = $^O =~ /MSWin32|Windows_NT/i ? 1 : 0;
 
-#xchen: modified for winNT
-if($^O =~ /Win/){
-    $CC::CC::tmp_dir = "\\WINNT\\Temp";
-}else{
-    $CC::CC::tmp_dir = '/var/tmp';
+if($CC::CC::is_windows) {
+    $CC::CC::tmp_dir = 
+		$ENV{TEMP} ne '' ? $ENV{TEMP} : 
+		$ENV{SYSTEMROOT} ne '' ? "$ENV{SYSTEMROOT}\\Temp" : 
+		"$ENV{WINDIR}\\Temp";
+} else{
+    $CC::CC::tmp_dir = '/tmp';
 }
 
 ##############################################################################
@@ -105,6 +108,13 @@ sub assert
 
     $expr || die(sprintf("##### ASSERTION FAILED at line %d in %s (package %s)\n",
                          $line, $file, $pkg));
+}
+
+##############################################################################
+sub is_windows
+##############################################################################
+{
+    $CC::CC::is_windows;
 }
 
 1;   # Make "use" and "require" happy
