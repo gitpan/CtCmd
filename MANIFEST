@@ -52,3 +52,4 @@ win32/atriatbs.conf
 win32/atriaview.conf
 win32/atriavob.conf
 win32/atriaxdr.conf
+META.yml                                 Module meta-data (added by MakeMaker)

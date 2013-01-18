@@ -1,6 +1,6 @@
 /*************************************************************************
 *                                                                        *
-* © Copyright IBM Corporation 2001, 2011 All rights reserved.            *
+* © Copyright IBM Corporation 2001, 2012 All rights reserved.            *
 *                                                                        *
 * This program and the accompanying materials are made available under   *
 * the terms of the Common Public License v1.0 which accompanies this     *
@@ -13,6 +13,8 @@
 * Kevin Sullivan - Defect fixes                                          *
 *                                                                        *
 * Xue-Dong Chen - Defect fixes                                           *
+*                                                                        *
+* Max Vohlken - Defect fixes                                             *
 *                                                                        *
 *************************************************************************/
 
@@ -52,6 +54,10 @@ TBS_DECL_VER_PRINT_VERID (libatriasquidad);
 TBS_DECL_VER_PRINT_VERID (libatriasquidcore);
 TBS_DECL_VER_PRINT_VERID (libatriasum);
 TBS_DECL_VER_PRINT_VERID (libatriasumcmd);
+#if defined(ATRIA_HAS_CMI)
+TBS_DECL_VER_PRINT_VERID (libatriacmi);
+TBS_DECL_VER_PRINT_VERID (libatriajson);
+#endif
 TBS_DECL_VER_PRINT_VERID (libatriatbs);	
 TBS_DECL_VER_PRINT_VERID (libatriaview);
 TBS_DECL_VER_PRINT_VERID (libatriavob);
@@ -261,6 +267,10 @@ version()
 	TBS_VER_PRINT_VERID (libatriasquidcore);
 	TBS_VER_PRINT_VERID (libatriasum);
 	TBS_VER_PRINT_VERID (libatriasumcmd);
+#if defined(ATRIA_HAS_CMI)
+	TBS_VER_PRINT_VERID (libatriacmi);
+	TBS_VER_PRINT_VERID (libatriajson);
+#endif
 	TBS_VER_PRINT_VERID (libatriatbs);	
 	TBS_VER_PRINT_VERID (libatriaview);
 	TBS_VER_PRINT_VERID (libatriavob);
@@ -415,4 +425,28 @@ exec(...)
         blok_done(&err);
 
 
-
+BOOT:
+#if PERL_REVISION == 5 && ((PERL_VERSION == 8 && PERL_SUBVERSION >= 6) || PERL_VERSION >= 9) && !defined(PERL_USE_SAFE_PUTENV)
+	/*
+	 * RATLC01540363: Make ClearCase::CtCmd module compatible with recent perl versions, starting of perl-5.10.0 and up to recent perl-5.16.0
+	 * The ClearCase core adds environment variables to the environment. When
+	 * it calls putenv to add an environment variable it passes a static buffer to
+	 * putenv. This conflicts with the assumption in the perl code that it is the
+	 * owner of the environment and as such all of the environment variables in
+	 * the environ array point to memory that it had allocated using malloc. So
+	 * during the destruction of the perl interpreter, perl calls free on all of
+	 * the pointers in the environ array which then triggers a crash in free
+	 * because free is trying to free the static buffer that the ClearCase
+	 * core had passed to putenv.
+	 * The workaround for this is to set the global variable PL_use_safe_putenv 
+	 * to 1. This tell the perl core that it isn't the sole owner of the environment
+	 * and as such the code to free the environ array is not executed during
+	 * the destruction of the interpreter. PL_use_safe_putenv is set to 0 when
+	 * the perl interpreter is instanciated by the perl executable but is set
+	 * to 1 if the perl interpreter is embedded inside any other program.
+	 * The downside of setting PL_use_safe_putenv to 1 is that anytime the perl
+	 * script modifies an existing environment variable it will cause a 
+	 * memory leak.
+	 */ 
+	PL_use_safe_putenv = 1;
+#endif

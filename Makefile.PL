@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# (C) Copyright IBM Corporation 2001, 2011. All rights reserved.         #
+# (C) Copyright IBM Corporation 2001, 2012. All rights reserved.         #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -71,25 +71,56 @@ use Config;
 
 my $os=$Config{osname};  #why not $^O ?
 
-my $archlib=$Config{archlib};
 my $name=ClearCase::CtCmd;
-my $inst_lib=$archlib.'/auto/'.$name;
 my $ATRIA_ROOT=$ENV{ATRIA_ROOT}?$ENV{ATRIA_ROOT}:"/opt/rational/clearcase"; 
 my $cleartool = $ATRIA_ROOT.'/bin/cleartool';
 $cleartool = 'cleartool' if($os =~ /MSWin32/ || $os =~ /Windows/);
 my $osver;
 
 die "Cannot find ClearCase 7.0 or higher or cannot find $cleartool" 
-unless $ctver = CheckVer('ClearCase version',
-		7.0,
+unless $ctver = CheckVer('cleartool',
+		'7.0',
 		$cleartool.' -ver',
 		1
 		);
 
+my $has_atriacmi = 0;
+
+# libatriacmi was added in 7.1.2.9 and 8.0.0.5.
+if(CheckVer(
+		'cleartool',
+		'7.1.2.9',
+		$cleartool.' -ver',
+		1
+	)
+	&& ! CheckVer(
+		'cleartool',
+		'8.0',
+		$cleartool.' -ver',
+		1
+	)
+) {
+	$has_atriacmi = 1;
+}
+
+if(CheckVer(
+		'cleartool',
+		'8.0.0.5',
+		$cleartool.' -ver',
+		1
+	)
+) {
+	$has_atriacmi = 1;
+}
+
+if($has_atriacmi) {
+	$atriacmi_libs = '-latriacmi -latriajson';
+}
+
 my %opts = (
 	    'NAME'	=> $name,
 	    'VERSION_FROM' => 'CtCmd.pm', # finds $VERSION
-	    'LIBS' =>' -L. -L'.$ATRIA_ROOT.'/shlib -latriacmdsyn -latriacmd -latriasumcmd -latriasum -latriamsadm -latriacm -latriavob -latriaview -latriacm -latriadbrpc -latriaxdr -latriamvfs -latriatbs -latriaadm -latriacredmap -latriaks -lezrpc -lrpcsvc -latriaccfs -latriasquidad -latriasquidcore -latriamsadm -latriamsinfobase -latriamsinfovob'
+	    'LIBS' => "-L. -L$ATRIA_ROOT/shlib -latriacmdsyn -latriacmd -latriasumcmd -latriasum $atriacmi_libs -latriamsadm -latriacm -latriavob -latriaview -latriacm -latriadbrpc -latriaxdr -latriamvfs -latriatbs -latriaadm -latriacredmap -latriaks -lezrpc -lrpcsvc -latriaccfs -latriasquidad -latriasquidcore -latriamsadm -latriamsinfobase -latriamsinfovob"
 	    );
 
 $opts{LIBS} .= ' -latriasplit -latriamntrpc' unless($os =~ /MSWin32/ || $os =~ /Windows/);
@@ -103,11 +134,11 @@ if ($os =~ /solaris/){
 	$opts{LD} = $default_compiler;
 	$opts{OPTIMIZE} = '-O';
 	$esp_str="gcc version";
-	$esp_ver=2.7;
+	$esp_ver='2.7';
 	$flag_rd = ' -v 2>&1';
     }elsif($default_compiler =~ /cc/){
-	$esp_str=/"WorkShop Compilers"|Sun/;
-	$esp_ver=4.2;
+	$esp_str=q(WorkShop Compilers|Sun C);
+	$esp_ver='4.2';
 	$flag_rd = ' -V 2>&1';
     }else{
 	die 'No default compiler';
@@ -128,39 +159,33 @@ if ($os =~ /solaris/){
 			);
     die "CtCmd requires Solaris 2.7 or higher"
 	unless CheckVer("SunOS",
-			5.7,
+			'5.7',
 			'uname -sr'
 			);
-    $opts{LIBS} ="-L/usr/lib $opts{LIBS} -lratlssl -lc -lw -lCstd -lCrun -R$ATRIA_ROOT/shlib";
+    $opts{LIBS} ="-L/usr/lib $opts{LIBS} -lratlssl -lc -lw -lCstd -lCrun";
     $opts{DEFINE}	= $opts{DEFINE}.'-DSVR4';
     $opts{INC}	= '-I. ';
-    $opts{dynamic_lib} = { OTHERLDFLAGS => "-Lblib/arch/auto/ClearCase/CtCmd -t -ucmdsyn_proc_table  -R$ATRIA_ROOT/shlib" . ' -R$(INSTALLSITEARCH)/auto/$(FULLEXT)  -R$(INSTALLSITELIB)/auto/$(FULLEXT) -R$(INST_ARCHLIB)/auto/$(FULLEXT) '} ;
+    $opts{dynamic_lib} = { OTHERLDFLAGS => "-t -ucmdsyn_proc_table -R$ATRIA_ROOT/shlib"} ;
 }elsif ($os =~ /linux/){
     $opts{LD} = $Config{ld};
     die 'Cannot find  '.$Config{cc}  
 	unless CheckVer('version',
-			2.7,
+			'2.7',
 			$Config{cc}.' -v 2>&1'
 			) ||
 	       CheckVer('version egcs-',
-			2.7,$Config{cc}.' -v 2>&1'
+			'2.7',$Config{cc}.' -v 2>&1'
 		       );
     $opts{DEFINE}= $opts{DEFINE}.'-DATRIA_LINUX';
     $opts{INC}='-I. ';
-    $opts{LIBS} ="-L/usr/lib $opts{LIBS} -lc -lncurses"; 
+    $opts{LIBS} ="-L/usr/lib -L/lib $opts{LIBS} -lc -lncurses"; 
     if ($Config{perl} =~ /ratlperl/ || $opts{LD} ne "ld") {
     $opts{dynamic_lib}={ OTHERLDFLAGS => 
-			     ' -ucmdsyn_proc_table -Wl,-rpath,'.
-			      $ATRIA_ROOT.
-			      '/shlib:.:'.
-			       $inst_lib
+			     " -ucmdsyn_proc_table -Wl,-rpath,$ATRIA_ROOT/shlib"
 		       };
     } else {
     $opts{dynamic_lib}={ OTHERLDFLAGS => 
-                             ' -ucmdsyn_proc_table -rpath '.
-                              $ATRIA_ROOT.
-                              '/shlib:.:'.
-                               $inst_lib
+                             " -ucmdsyn_proc_table -rpath $ATRIA_ROOT/shlib"
                        };
     }
 
@@ -198,7 +223,7 @@ if ($os =~ /solaris/){
 	'Cannot find  '
 	.$Config{cc}.
 	' -> Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 12'  
-		unless CheckVer('Version',12,$Config{cc}.' 2>&1' );
+		unless CheckVer('Version','12',$Config{cc}.' 2>&1' );
     $opts{CCFLAGS} = $Config{ccflags}.' -DATRIA_WIN32_COMMON';
 	while($opts{LIBS} =~ /-l(atria[^ ]+)/g) {
 		my $lib = $1;
@@ -215,6 +240,10 @@ if ($os =~ /solaris/){
     $opts{LDDLFLAGS} =~ s/blibpath:/blibpath:$ATRIA_ROOT\/shlib:/;
 }else{print "Unsupported Platform\n"}
 
+if($has_atriacmi) {
+	$opts{DEFINE} .= ' -DATRIA_HAS_CMI';
+}
+
 WriteMakefile(%opts);
 
 sub CheckVer{
@@ -223,14 +252,13 @@ sub CheckVer{
     my $prog_output = shift;
     my $trailing = shift;
     $prog_output = `$prog_output`;
-    $prog_output =~ /$expected_string\s*(\d+\.\d+\.?\d*)/i;
+    $prog_output =~ /$expected_string\s*(\d+(\.\d+){1,3})/i;
     $found_level = $1;
     @minversion = split('\.',$level);
-    $minversize = @minversion;    
 #
 # The output of the cleartool -ver command has changed.
 # An earlier version looks like 2003.06.00 while a later version
-# looks like 7.0.0.   We need to be able to handle both styles. 
+# looks like 7.0.0.0   We need to be able to handle both styles. 
 # The trailing flag means that the version trails the year so we
 # need to remove the year.  That is no longer always true so we
 # need to test to see if the year is first, if it is not the we
@@ -243,22 +271,13 @@ sub CheckVer{
 
     if($trailing){
 	$found_level =~ s/\d+\.(\d+\.\d+)/$1/;
-    }else{
-	$found_level =~ s/(\d+\.\d+)\.\d+/$1/;
     }
     @foundversion = split('\.',$found_level);
-    $foundversionsize = @foundversion;
     my $ans = Found;
     $ans = 'Not Found' unless $1;
     print "Looking for $expected_string\t$level\t$ans\t$found_level\n";
 
-    if ($minversize >= $foundversionsize){
-       $numcompare=$foundversionsize;
-    }else{
-        $numcompare = $minversize;
-    }
-
-    for ($i = 0; $i < $numcompare; $i++)
+    for ($i = 0; $i < @minversion; $i++)
         {
            if ($foundversion[$i] > $minversion[$i]){
                 return  $found_level;
