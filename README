@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# (C) Copyright IBM Corporation 2002, 2010 All rights reserved.          #
+# (C) Copyright IBM Corporation 2002, 2013 All rights reserved.          #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -9,15 +9,18 @@
 #                                                                        #
 # William Spurlin - Initial version and framework                        #
 #                                                                        #
+# Max Vohlken - Defect fixes                                             #
+#                                                                        #
 ##########################################################################
 
  
 ClearCase::CtCmd is an interface to IBM Rational ClearCase.  For support, 
-contact support@rational.com.  For installation instructions, see
+go to http://support.ibm.com.  For installation instructions, see
 INSTALL.
 
 ClearCase::CtCmd is supported on all platforms that IBM Rational ClearCase
-supports.
+supports. Starting with IBM Rational ClearCase version 8.0.0.0 
+ClearCase::CtCmd is shipped as part of the product.
 
 
 ##########################################################################
@@ -109,17 +112,3 @@ LD_RUN_PATH="/usr/atria/shlib:/usr/lib:/var/tmp/CtCmd" ld  -G -L/usr/atria/shlib
     /opt/perl_5.6.1/lib/sun4-solaris/ClearCase/CtCmd.pm .  
     Directories will have to be created. 
 
-
-# AIX
-
-On AIX platforms, with IBM Rational ClearCase v7.x, you must edit 
-/usr/opt/perl5/lib[64]/5.8.2/aix-thread-multi/Config.pm and change
-
-lib_ext = ".a"
-
-to
-
-lib_ext = ".so"
-
-before doing "perl Makefile.PL", otherwise perl will look for libraries 
-with the ".a" extension.

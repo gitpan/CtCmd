@@ -1,6 +1,6 @@
 ##########################################################################
 #                                                                        #
-# (C) Copyright IBM Corporation 2001, 2012. All rights reserved.         #
+# (C) Copyright IBM Corporation 2001, 2013. All rights reserved.         #
 #                                                                        #
 # This program and the accompanying materials are made available under   #
 # the terms of the Common Public License v1.0 which accompanies this     #
@@ -73,9 +73,15 @@ my $os=$Config{osname};  #why not $^O ?
 
 my $name=ClearCase::CtCmd;
 my $ATRIA_ROOT=$ENV{ATRIA_ROOT}?$ENV{ATRIA_ROOT}:"/opt/rational/clearcase"; 
+my $COMMON_ROOT=$ENV{COMMON_ROOT}?$ENV{COMMON_ROOT}:"/opt/rational/common"; 
 my $cleartool = $ATRIA_ROOT.'/bin/cleartool';
 $cleartool = 'cleartool' if($os =~ /MSWin32/ || $os =~ /Windows/);
 my $osver;
+
+# CtCmd can only be used with a 32-bit perl.
+if($Config{ptrsize} != 4) {
+	die("$^X is not a 32-bit application. $name is only supported with a 32-bit perl.\n");
+}
 
 die "Cannot find ClearCase 7.0 or higher or cannot find $cleartool" 
 unless $ctver = CheckVer('cleartool',
@@ -120,7 +126,7 @@ if($has_atriacmi) {
 my %opts = (
 	    'NAME'	=> $name,
 	    'VERSION_FROM' => 'CtCmd.pm', # finds $VERSION
-	    'LIBS' => "-L. -L$ATRIA_ROOT/shlib -latriacmdsyn -latriacmd -latriasumcmd -latriasum $atriacmi_libs -latriamsadm -latriacm -latriavob -latriaview -latriacm -latriadbrpc -latriaxdr -latriamvfs -latriatbs -latriaadm -latriacredmap -latriaks -lezrpc -lrpcsvc -latriaccfs -latriasquidad -latriasquidcore -latriamsadm -latriamsinfobase -latriamsinfovob"
+	    'LIBS' => "-L. -L$ATRIA_ROOT/shlib -L$COMMON_ROOT/shlib -latriacmdsyn -latriacmd -latriasumcmd -latriasum $atriacmi_libs -latriamsadm -latriacm -latriavob -latriaview -latriacm -latriadbrpc -latriaxdr -latriamvfs -latriatbs -latriaadm -latriacredmap -latriaks -lezrpc -lrpcsvc -latriaccfs -latriasquidad -latriasquidcore -latriamsadm -latriamsinfobase -latriamsinfovob"
 	    );
 
 $opts{LIBS} .= ' -latriasplit -latriamntrpc' unless($os =~ /MSWin32/ || $os =~ /Windows/);
@@ -165,7 +171,7 @@ if ($os =~ /solaris/){
     $opts{LIBS} ="-L/usr/lib $opts{LIBS} -lratlssl -lc -lw -lCstd -lCrun";
     $opts{DEFINE}	= $opts{DEFINE}.'-DSVR4';
     $opts{INC}	= '-I. ';
-    $opts{dynamic_lib} = { OTHERLDFLAGS => "-t -ucmdsyn_proc_table -R$ATRIA_ROOT/shlib"} ;
+    $opts{dynamic_lib} = { OTHERLDFLAGS => "-t -ucmdsyn_proc_table -R$ATRIA_ROOT/shlib -R$COMMON_ROOT/shlib"} ;
 }elsif ($os =~ /linux/){
     $opts{LD} = $Config{ld};
     die 'Cannot find  '.$Config{cc}  
@@ -176,16 +182,18 @@ if ($os =~ /solaris/){
 	       CheckVer('version egcs-',
 			'2.7',$Config{cc}.' -v 2>&1'
 		       );
-    $opts{DEFINE}= $opts{DEFINE}.'-DATRIA_LINUX';
+    my $bits = 32;
+	$bits = 31 if($os =~ /390/);
+	$opts{DEFINE}= $opts{DEFINE}." -m$bits -DATRIA_LINUX";
     $opts{INC}='-I. ';
     $opts{LIBS} ="-L/usr/lib -L/lib $opts{LIBS} -lc -lncurses"; 
     if ($Config{perl} =~ /ratlperl/ || $opts{LD} ne "ld") {
     $opts{dynamic_lib}={ OTHERLDFLAGS => 
-			     " -ucmdsyn_proc_table -Wl,-rpath,$ATRIA_ROOT/shlib"
+			     " -m$bits -ucmdsyn_proc_table -Wl,-rpath,$ATRIA_ROOT/shlib -Wl,-rpath,$COMMON_ROOT/shlib"
 		       };
     } else {
     $opts{dynamic_lib}={ OTHERLDFLAGS => 
-                             " -ucmdsyn_proc_table -rpath $ATRIA_ROOT/shlib"
+                             " -ucmdsyn_proc_table -rpath $ATRIA_ROOT/shlib -rpath $COMMON_ROOT/shlib"
                        };
     }
 
@@ -208,9 +216,9 @@ if ($os =~ /solaris/){
 				$opts{LIBS} = "-L/usr/lib $opts{LIBS}";
 			}
 			$opts{LDFLAGS}=$Config{ldflags};
-			$opts{LDFLAGS} =~ s!\-Wl,\+b!-Wl,+b/opt/rational/clearcase/shlib:!g;
+			$opts{LDFLAGS} =~ s!\-Wl,\+b!-Wl,+b${ATRIA_ROOT}/shlib:${COMMON_ROOT}/shlib:!g;
 			$opts{LDDLFLAGS}=$Config{lddlflags};
-			$opts{LDDLFLAGS} =~ s!\-Wl,\+b!-Wl,+b/opt/rational/clearcase/shlib:!g;
+			$opts{LDDLFLAGS} =~ s!\-Wl,\+b!-Wl,+b${ATRIA_ROOT}/shlib:${COMMON_ROOT}/shlib:!g;
 		}else{
 			#$opts{dynamic_lib}={ OTHERLDFLAGS => ' +b: -E -l:libcl.0  -l:libc.0 '};
 		}
@@ -235,9 +243,19 @@ if ($os =~ /solaris/){
     $opts{LDDLFLAGS} =~ s/-nodefaultlib//;
     require 'Win32C_O';
 }elsif ($os =~ /AIX/i){
+	$opts{DEFINE}= $opts{DEFINE}.' -q32';
     $opts{LIBS} = "-L/usr/lib -L/lib $opts{LIBS} $Config{LIBS}";
-    $opts{LDDLFLAGS} = $Config{lddlflags} ." -brtl -bshared ";
-    $opts{LDDLFLAGS} =~ s/blibpath:/blibpath:$ATRIA_ROOT\/shlib:/;
+    $opts{LDDLFLAGS} = $Config{lddlflags} ." -b32 -brtl -bshared ";
+    $opts{LDDLFLAGS} =~ s/blibpath:/blibpath:$ATRIA_ROOT\/shlib:$COMMON_ROOT\/shlib:/;
+	# The ClearCase libraries end in .so so to get the library search
+	# mechanism in MakeMaker to work we need to change the lib_ext
+	# value in the Config module from .a to .so.
+	# $Config{lib_ext} is read-only so this is how I found to modify it.
+	if(defined($Config::Config_SH_expanded) and $Config{lib_ext} eq '.a') {
+		$Config::Config_SH_expanded =~ s/^lib_ext='[^']+/lib_ext='.so/m;
+		# This updates %Config.
+		tied(%Config::Config)->fetch_string('lib_ext');
+	}
 }else{print "Unsupported Platform\n"}
 
 if($has_atriacmi) {
